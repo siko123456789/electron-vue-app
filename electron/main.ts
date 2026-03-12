@@ -1,8 +1,13 @@
-import { app, BrowserWindow, screen } from 'electron'
+import { app, BrowserWindow, ipcMain, net, screen, session } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// ⚠️ Security: accepting invalid TLS certificates is dangerous.
+// This is enabled to support internal/self-signed backends that cannot be changed.
+// Consider restricting by hostname/IP or making this a dev-only feature.
+app.commandLine.appendSwitch('ignore-certificate-errors')
 
 // The built directory structure
 //
@@ -84,4 +89,44 @@ app.on('activate', () => {
   }
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  session.defaultSession.setCertificateVerifyProc((_request, callback) => callback(0))
+
+  ipcMain.handle('http-request', async (_event, options) => {
+    const method = String(options?.method || 'GET').toUpperCase()
+    const url = String(options?.url || '')
+    const headers = (options?.headers && typeof options.headers === 'object') ? options.headers : {}
+    const body = options?.body ?? null
+
+    if (!url) throw new Error('Missing url')
+
+    return await new Promise((resolve, reject) => {
+      const request = net.request({ method, url, session: session.defaultSession })
+
+      for (const [key, value] of Object.entries(headers)) {
+        if (value === undefined || value === null) continue
+        request.setHeader(key, String(value))
+      }
+
+      request.on('response', (response) => {
+        const chunks: Buffer[] = []
+        response.on('data', (chunk) => chunks.push(Buffer.from(chunk)))
+        response.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf8')
+          resolve({
+            status: response.statusCode,
+            headers: response.headers,
+            data: text,
+          })
+        })
+      })
+
+      request.on('error', (error) => reject(error))
+
+      if (body !== null && body !== undefined) request.write(String(body))
+      request.end()
+    })
+  })
+
+  createWindow()
+})

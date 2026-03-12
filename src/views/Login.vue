@@ -15,6 +15,14 @@
         :rules="rules"
         label-position="top"
       >
+        <el-form-item label="服务器地址" prop="apiBase">
+          <el-input
+            v-model="form.apiBase"
+            placeholder="例如 https://10.10.10.99（留空则走本地 /api 代理）"
+            clearable
+          />
+        </el-form-item>
+
         <el-form-item prop="user">
           <el-input
             v-model="form.user"
@@ -65,15 +73,17 @@
   </div>
 </template>
 
-<script setup>
-import { ref, reactive, onMounted } from "vue"
-import { useRouter } from "vue-router"
-import { ElMessage } from "element-plus"
-import { login as loginApi } from "@/api/login"
-import { useAuthStore } from "@/stores/auth"
+	<script setup>
+	import { ref, reactive, onMounted } from "vue"
+	import { useRouter } from "vue-router"
+	import { ElMessage } from "element-plus"
+	import { login as loginApi } from "@/api/login"
+	import { useAuthStore } from "@/stores/auth"
+	import { useSettingsStore } from "@/stores/settings"
 
-const router = useRouter()
-const authStore = useAuthStore()
+	const router = useRouter()
+	const authStore = useAuthStore()
+	const settingsStore = useSettingsStore()
 
 const formRef = ref()
 const captchaCanvas = ref()
@@ -85,11 +95,12 @@ const title = ref("风险治理系统")
 
 const captcha = ref(false)
 
-const form = reactive({
-  user: "",
-  password: "",
-  code: ""
-})
+	const form = reactive({
+	  apiBase: settingsStore.apiBase || "",
+	  user: "",
+	  password: "",
+	  code: ""
+	})
 
 const rules = {
   user: [
@@ -100,19 +111,20 @@ const rules = {
   ]
 }
 
-const handleLogin = async () => {
+	const handleLogin = async () => {
 
-  try {
+	  try {
 
-    await formRef.value.validate()
+	    await formRef.value.validate()
 
-    loading.value = true
+	    loading.value = true
+	    settingsStore.setApiBase(form.apiBase)
 
-    const res = await loginApi({
-      user: form.user,
-      password: form.password,
-      code: form.code
-    })
+	    const res = await loginApi({
+	      user: form.user,
+	      password: form.password,
+	      code: form.code
+	    })
     console.log(res,12345)
 	    if (res.code === 0) {
 	      const token = res?.data?.token || 'login-success-' + Date.now()
@@ -159,7 +171,7 @@ onMounted(() => {
 	  if (authStore.isLoggedIn) router.push("/workbench")
 
 })
-</script>
+	</script>
 
 <style scoped>
 
