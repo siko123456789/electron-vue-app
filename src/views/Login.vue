@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="login-box">
 
-      <!-- logo1111 -->
+      <!-- logo111122 -->
       <div class="logo-area">
         <img :src="logoSrc" class="logo" />
         <h2 class="title">{{ title }}</h2>
