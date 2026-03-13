@@ -8,7 +8,9 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build && electron-builder",
+    "build:web": "vue-tsc && vite build",
+    "build:electron": "electron-builder",
+    "build": "npm run build:web && npm run build:electron",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -35,23 +37,24 @@
     "asar": true,
     "compression": "maximum",
     "publish": null,
+    "npmRebuild": false,
+    "nodeGypRebuild": false,
     "directories": {
       "output": "release"
     },
     "files": [
-      "dist",
-      "dist-electron"
+      "dist/**/*",
+      "dist-electron/**/*",
+      "!src",
+      "!node_modules/.cache",
+      "!**/*.map",
+      "!*.log",
+      "!*.md"
     ],
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "public/icon.ico"
+      "target": "nsis",
+      "icon": "public/icon.ico",
+      "artifactName": "${productName}-${version}-setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
