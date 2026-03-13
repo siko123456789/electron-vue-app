@@ -34,6 +34,7 @@
     "productName": "风险治理",
     "asar": true,
     "compression": "maximum",
+    "publish": null,
     "directories": {
       "output": "release"
     },
