@@ -39,6 +39,9 @@
     "publish": null,
     "npmRebuild": false,
     "nodeGypRebuild": false,
+    "electronLanguages": [
+      "en"
+    ],
     "directories": {
       "output": "release"
     },
@@ -65,7 +68,8 @@
           ]
         }
       ],
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "type": "distribution"
     },
     "nsis": {
       "oneClick": false,
