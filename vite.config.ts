@@ -5,6 +5,8 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // Electron production build loads via file://, use relative assets paths.
+  base: './',
   plugins: [
     vue(),
     electron({
@@ -24,13 +26,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src')
     }
   },
-	  server: {
-	    proxy: {
-	      '/api': {
-	        target: 'https://10.10.10.99',
-	        changeOrigin: true,
-	        secure: false,
-	      }
-	    }
-	  }
-	})
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://10.10.10.99',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  }
+})

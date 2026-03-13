@@ -73,8 +73,8 @@
   </div>
 </template>
 
-	<script setup>
-	import { ref, reactive, onMounted } from "vue"
+		<script setup>
+		import { ref, reactive, onMounted } from "vue"
 	import { useRouter } from "vue-router"
 	import { ElMessage } from "element-plus"
 	import { login as loginApi } from "@/api/login"
@@ -90,8 +90,9 @@ const captchaCanvas = ref()
 
 const loading = ref(false)
 
-const logoSrc = ref("/lanhu_logo.png")
-const title = ref("风险治理系统")
+	// Use BASE_URL so it works for both dev server and file:// production build.
+	const logoSrc = `${import.meta.env.BASE_URL}lanhu_logo.png`
+	const title = ref("风险治理系统")
 
 const captcha = ref(false)
 
