@@ -56,6 +56,13 @@
       "icon": "public/icon.ico",
       "artifactName": "${productName}-${version}-setup.${ext}"
     },
+    "mac": {
+      "target": "dmg",
+      "arch": [
+        "arm64"
+      ],
+      "category": "public.app-category.productivity"
+    },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
