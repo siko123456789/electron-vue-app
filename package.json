@@ -57,9 +57,13 @@
       "artifactName": "${productName}-${version}-setup.${ext}"
     },
     "mac": {
-      "target": "dmg",
-      "arch": [
-        "arm64"
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
       ],
       "category": "public.app-category.productivity"
     },
