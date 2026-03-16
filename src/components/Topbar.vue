@@ -145,20 +145,17 @@
 
 <script setup lang="ts">
 import {
-  Aim,
   Bell,
-  Document,
   HomeFilled,
   Lock,
-  QuestionFilled,
   Setting,
   SwitchButton,
   User,
-  Warning
 } from "@element-plus/icons-vue";
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useAlertsStore } from "@/stores/alerts";
 import { useAuthStore } from "@/stores/auth";
+import type { UserInfo } from "@/stores/auth";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter, useRoute } from "vue-router";
 import { logout } from "@/api/login";
@@ -180,7 +177,7 @@ const pickFirstString = (candidates: any[]) => {
 };
 
 const username = computed(() => {
-  const info = authStore.userInfo || {};
+  const info = (authStore.userInfo ?? {}) as UserInfo;
   return (
     pickFirstString([
       info.username,
@@ -195,7 +192,7 @@ const username = computed(() => {
 });
 
 const roleName = computed(() => {
-  const info = authStore.userInfo || {};
+  const info = (authStore.userInfo ?? {}) as UserInfo;
   return pickFirstString([
     info.role_name,
     info.roleName,

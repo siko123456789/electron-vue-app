@@ -1,6 +1,29 @@
 import { defineStore } from 'pinia'
 
-type UserInfo = unknown
+export type UserInfo = {
+  username?: string
+  userName?: string
+  name?: string
+  realName?: string
+  roleName?: string
+  role_name?: string
+  role?: {
+    name?: string
+  }
+  user?: {
+    username?: string
+    name?: string
+    roleName?: string
+    role_name?: string
+    role?: {
+      name?: string
+    }
+  }
+  profile?: {
+    username?: string
+  }
+  [key: string]: unknown
+}
 
 type AuthState = {
   token: string | null
@@ -24,7 +47,7 @@ function safeParseJson(value: string | null): unknown {
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
     token: localStorage.getItem(STORAGE_KEYS.token),
-    userInfo: safeParseJson(localStorage.getItem(STORAGE_KEYS.userInfo)),
+    userInfo: safeParseJson(localStorage.getItem(STORAGE_KEYS.userInfo)) as UserInfo | null,
   }),
   getters: {
     isLoggedIn: (state) => Boolean(state.token),

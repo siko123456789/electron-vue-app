@@ -13,8 +13,8 @@
  */
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, net, screen, session, shell, Tray } from 'electron'
 import { fileURLToPath } from 'node:url'
-import path from 'node:path'
-import fs from 'node:fs/promises'
+import * as path from 'node:path'
+import * as fs from 'node:fs/promises'
 
 // 获取当前文件目录路径
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
