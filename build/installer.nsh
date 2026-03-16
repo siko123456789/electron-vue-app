@@ -34,11 +34,16 @@ Function AutoStartPageLeave
 FunctionEnd
 
 !macro customWelcomePage
+  !insertmacro skipPageIfUpdated
   Page custom AutoStartPageCreate AutoStartPageLeave
 !macroend
 
 !macro customInit
   StrCpy $AutoStartState 1
+
+  ${If} ${isUpdated}
+    StrCpy $AutoStartState 0
+  ${EndIf}
 
   ReadRegStr $0 HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCT_NAME}"
   ${If} $0 != ""
