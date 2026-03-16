@@ -1,34 +1,64 @@
 <template>
   <div class="page">
-    <el-card shadow="never">
-      <template #header>
-        <div class="header">
-          <span>{{ title }}</span>
-        </div>
-      </template>
-      <el-empty description="页面开发中" />
+    <div class="head">
+      <div class="title">攻击面治理</div>
+      <div class="sub">此页面后续可接入资产/端口/漏洞等模块。</div>
+    </div>
+
+    <el-card class="card">
+      <div class="placeholder">
+        <div class="k">待接入</div>
+        <div class="p">这里先做一级菜单占位，避免顶部导航缺项。</div>
+      </div>
     </el-card>
   </div>
 </template>
 
-<script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-
-const route = useRoute()
-const title = computed(() => (route.meta?.title as string) || (route.name as string) || route.path)
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.head .title {
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--app-text);
+}
+
+.head .sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--app-muted);
+}
+
+.card {
+  border-radius: 14px;
+  border: 1px solid var(--app-border);
+  box-shadow: var(--app-shadow);
+}
+
+.placeholder {
+  padding: 18px;
+  border-radius: 12px;
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.placeholder .k {
+  font-weight: 800;
+  color: var(--app-purple);
+}
+
+.placeholder .p {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--app-muted);
 }
 </style>
+

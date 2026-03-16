@@ -7,9 +7,23 @@ type SettingsState = {
    * - Absolute URL will be normalized to include '/api' suffix
    */
   apiBase: string
+
+  /** Whether to enable app notifications (sound/popup). */
+  notificationsEnabled: boolean
 }
 
-const STORAGE_KEY = 'apiBase'
+const STORAGE_KEYS = {
+  apiBase: 'apiBase',
+  notificationsEnabled: 'notificationsEnabled',
+} as const
+
+function readBool(key: string, fallback: boolean) {
+  const raw = localStorage.getItem(key)
+  if (raw === null) return fallback
+  if (raw === '1' || raw === 'true') return true
+  if (raw === '0' || raw === 'false') return false
+  return fallback
+}
 
 function normalizeApiBase(input: string): string {
   const raw = (input || '').trim()
@@ -39,15 +53,19 @@ function normalizeApiBase(input: string): string {
 
 export const useSettingsStore = defineStore('settings', {
   state: (): SettingsState => ({
-    apiBase: localStorage.getItem(STORAGE_KEY) || '',
+    apiBase: localStorage.getItem(STORAGE_KEYS.apiBase) || '',
+    notificationsEnabled: readBool(STORAGE_KEYS.notificationsEnabled, true),
   }),
   actions: {
     setApiBase(value: string) {
       const normalized = normalizeApiBase(value)
       this.apiBase = normalized
-      if (normalized) localStorage.setItem(STORAGE_KEY, normalized)
-      else localStorage.removeItem(STORAGE_KEY)
+      if (normalized) localStorage.setItem(STORAGE_KEYS.apiBase, normalized)
+      else localStorage.removeItem(STORAGE_KEYS.apiBase)
+    },
+    setNotificationsEnabled(value: boolean) {
+      this.notificationsEnabled = Boolean(value)
+      localStorage.setItem(STORAGE_KEYS.notificationsEnabled, this.notificationsEnabled ? '1' : '0')
     },
   },
 })
-

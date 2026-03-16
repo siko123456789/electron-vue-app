@@ -1,7 +1,6 @@
 <!-- src/App.vue -->
 <template>
   <div class="app-layout">
-    <Sidebar class="app-sidebar" />
     <div class="app-main">
       <Topbar class="app-topbar" />
       <main class="app-content">
@@ -12,7 +11,6 @@
 </template>
 
 <script setup>
-import Sidebar from './components/Sidebar.vue'
 import Topbar from './components/Topbar.vue'
 </script>
 
@@ -21,10 +19,6 @@ import Topbar from './components/Topbar.vue'
   height: 100%;
   display: flex;
   background: var(--app-bg);
-}
-
-.app-sidebar {
-  flex: 0 0 220px;
 }
 
 .app-main {

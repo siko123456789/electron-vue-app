@@ -10,25 +10,29 @@
     <div class="section">治理中心</div>
 
     <el-menu :default-active="activeMenu" class="menu" router>
-      <el-menu-item index="/workbench">
+      <!-- <el-menu-item index="/workbench">
         <el-icon><HomeFilled /></el-icon>
         <span>工作台</span>
-      </el-menu-item>
-      <el-menu-item index="/attack-surface">
+      </el-menu-item> -->
+      <!-- <el-menu-item index="/attack-surface">
         <el-icon><Aim /></el-icon>
         <span>攻击面治理</span>
-      </el-menu-item>
-      <el-menu-item index="/threat-assessment">
+      </el-menu-item> -->
+      <!-- <el-menu-item index="/threat-assessment">
         <el-icon><Warning /></el-icon>
         <span>威胁评估</span>
-      </el-menu-item>
-      <el-menu-item index="/events">
+      </el-menu-item> -->
+      <!-- <el-menu-item index="/events">
         <el-icon><Bell /></el-icon>
         <span>事件响应</span>
-      </el-menu-item>
-      <el-menu-item index="/operation">
+      </el-menu-item> -->
+      <!-- <el-menu-item index="/operation">
         <el-icon><Document /></el-icon>
         <span>策略整改</span>
+      </el-menu-item> -->
+      <el-menu-item index="/settings">
+        <el-icon><Setting /></el-icon>
+        <span>设置</span>
       </el-menu-item>
     </el-menu>
 
@@ -55,7 +59,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Aim, Bell, Document, HomeFilled, Lock, More, Warning, SwitchButton } from '@element-plus/icons-vue'
+  import { Aim, Bell, Document, HomeFilled, Lock, More, Warning, SwitchButton, Setting } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 	import { useAuthStore } from "@/stores/auth"
 	import { logout } from "@/api/login"
