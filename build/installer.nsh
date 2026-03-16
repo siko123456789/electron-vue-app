@@ -28,7 +28,7 @@ Function AutoStartPageLeave
   ${NSD_GetState} $AutoStartCheckbox $AutoStartState
 FunctionEnd
 
-!macro customPage
+!macro customWelcomePage
   Page custom AutoStartPageCreate AutoStartPageLeave
 !macroend
 
