@@ -6,10 +6,6 @@ Var AutoStartCheckbox
 Var AutoStartState
 
 Function AutoStartPageCreate
-  ${If} ${isUpdated}
-    Abort
-  ${EndIf}
-
   nsDialogs::Create 1018
   Pop $0
   ${If} $0 == error
