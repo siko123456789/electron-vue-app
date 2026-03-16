@@ -1,4 +1,3 @@
-!include "MUI2.nsh"
 !include "LogicLib.nsh"
 !include "nsDialogs.nsh"
 !include "WinMessages.nsh"
@@ -21,10 +20,6 @@ Function AutoStartPageCreate
   ${NSD_CreateCheckbox} 0 30u 100% 12u "开机自启动"
   Pop $AutoStartCheckbox
 
-  ${If} $AutoStartState == 1
-    ${NSD_Check} $AutoStartCheckbox
-  ${EndIf}
-
   nsDialogs::Show
 FunctionEnd
 
@@ -32,7 +27,7 @@ Function AutoStartPageLeave
   ${NSD_GetState} $AutoStartCheckbox $AutoStartState
 FunctionEnd
 
-!macro customWelcomePage
+!macro customPage
   Page custom AutoStartPageCreate AutoStartPageLeave
 !macroend
 
