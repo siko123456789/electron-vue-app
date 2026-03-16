@@ -61,8 +61,7 @@
     "win": {
       "target": "nsis",
       "icon": "public/icon.ico",
-      "artifactName": "${productName}-${version}-setup.${ext}",
-      "sign": false
+      "artifactName": "${productName}-${version}-setup.${ext}"
     },
     "mac": {
       "target": [
