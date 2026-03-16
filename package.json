@@ -36,7 +36,11 @@
     "productName": "风险治理",
     "asar": true,
     "compression": "maximum",
-    "publish": null,
+    "publish": [
+      {
+        "provider": "github"
+      }
+    ],
     "npmRebuild": false,
     "nodeGypRebuild": false,
     "electronLanguages": [
@@ -57,7 +61,8 @@
     "win": {
       "target": "nsis",
       "icon": "public/icon.ico",
-      "artifactName": "${productName}-${version}-setup.${ext}"
+      "artifactName": "${productName}-${version}-setup.${ext}",
+      "sign": false
     },
     "mac": {
       "target": [
