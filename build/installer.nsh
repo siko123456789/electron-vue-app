@@ -3,6 +3,7 @@
 !include "nsDialogs.nsh"
 !include "WinMessages.nsh"
 
+!ifndef BUILD_UNINSTALLER
 Var AutoStartCheckbox
 Var AutoStartState
 
@@ -18,11 +19,15 @@ Function AutoStartPageCreate
   ${NSD_CreateLabel} 0 0 100% 24u "建议开启：应用将以托盘方式后台常驻（不会影响正常使用）。"
   Pop $1
 
-  ${NSD_CreateCheckbox} 0 30u 100% 12u "开机自启动"
-  Pop $AutoStartCheckbox
-
-  nsDialogs::Show
-FunctionEnd
+	  ${NSD_CreateCheckbox} 0 30u 100% 12u "开机自启动"
+	  Pop $AutoStartCheckbox
+	
+	  ${If} $AutoStartState == 1
+	    ${NSD_Check} $AutoStartCheckbox
+	  ${EndIf}
+	
+	  nsDialogs::Show
+	FunctionEnd
 
 Function AutoStartPageLeave
   ${NSD_GetState} $AutoStartCheckbox $AutoStartState
@@ -30,6 +35,20 @@ FunctionEnd
 
 !macro customWelcomePage
   Page custom AutoStartPageCreate AutoStartPageLeave
+!macroend
+
+!macro customInit
+  StrCpy $AutoStartState 1
+
+  ReadRegStr $0 HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCT_NAME}"
+  ${If} $0 != ""
+    StrCpy $AutoStartState 1
+  ${Else}
+    ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCT_NAME}"
+    ${If} $0 != ""
+      StrCpy $AutoStartState 1
+    ${EndIf}
+  ${EndIf}
 !macroend
 
 !macro customInstall
@@ -44,3 +63,4 @@ FunctionEnd
     DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCT_NAME}"
   ${EndIf}
 !macroend
+!endif
