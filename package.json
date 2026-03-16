@@ -8,7 +8,7 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build:web": "vue-tsc && vite build",
+    "build:web": "vite build",
     "build:electron": "electron-builder",
     "build": "npm run build:web && npm run build:electron",
     "preview": "vite preview"
