@@ -5,6 +5,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { pinia } from '@/stores'
+import { ElMessage } from 'element-plus'
 
 // 存储 API 基础 URL 的 localStorage 键名
 const SETTINGS_API_BASE_KEY = 'apiBase'
@@ -237,19 +238,47 @@ export function clearApiCache() {
  * @returns 处理后的数据
  */
 function normalizeResponseData(data: any) {
-  if (data && typeof data === 'object' && 'code' in data) {
-    const code = (data as any).code
-    // 如果 code 为 200 或 0，认为请求成功
-    if (code === 200 || code === 0) return data
+  if (data && typeof data === 'object') {
+    const code = Number(data.code)
 
-    const message = (data as any).message || (data as any).msg
-    console.error('响应错误:', message)
-    throw new Error(message || '请求失败')
+    // ✅ 登录失效统一处理
+    if (code === 1004) {
+      handleLoginExpired()
+      // ❗这里不能 return 正常数据
+      return Promise.reject(new Error('登录已过期'))
+    }
+
+    return data
   }
 
   return data
 }
 
+
+let isHandlingLoginExpired = false
+
+function handleLoginExpired() {
+  if (isHandlingLoginExpired) return
+  isHandlingLoginExpired = true
+
+  try {
+    const authStore = useAuthStore(pinia)
+    authStore.clearAuth()
+  } catch {}
+
+  const isLoginPage = location.hash.includes('/login')
+
+  if (!isLoginPage) {
+    ElMessage.error('未授权，请重新登录')
+
+    // ✅ 跳转登录页
+    location.hash = '#/login'
+  }
+
+  setTimeout(() => {
+    isHandlingLoginExpired = false
+  }, 1000)
+} 
 /**
  * 处理未授权情况
  * 清除认证信息并跳转到登录页面

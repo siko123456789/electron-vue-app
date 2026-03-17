@@ -1,7 +1,10 @@
 :root {
-  --app-purple: #7c3aed;
+  --app-purple: #9810fa;
   --app-purple-soft: #f3e8ff;
   --app-success: #10b981;
+  --app-warning: #f59e0b;
+  --app-danger: #ef4444;
+  --app-info: #64748b;
   --app-bg: #f6f7fb;
   --app-surface: #ffffff;
   --app-border: #e9edf5;
@@ -9,15 +12,70 @@
   --app-muted: #64748b;
   --app-muted-bg: #f7f9fc;
   --app-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
-
-  /* Element Plus CSS variables overrides */
+  --default-color: var(--app-purple);
+  --el-color-primary-rgb: 152, 16, 250;
   --el-color-primary: var(--app-purple);
+  --el-color-primary-light-3: color-mix(in srgb, var(--el-color-primary) 70%, #fff);
+  --el-color-primary-light-5: color-mix(in srgb, var(--el-color-primary) 50%, #fff);
+  --el-color-primary-light-7: color-mix(in srgb, var(--el-color-primary) 30%, #fff);
+  --el-color-primary-light-8: color-mix(in srgb, var(--el-color-primary) 20%, #fff);
+  --el-color-primary-light-9: color-mix(in srgb, var(--el-color-primary) 10%, #fff);
+  --el-color-primary-dark-2: color-mix(in srgb, var(--el-color-primary) 80%, #000);
+
+  --el-color-success: var(--app-success);
+  --el-color-success-light-3: color-mix(in srgb, var(--el-color-success) 70%, #fff);
+  --el-color-success-light-5: color-mix(in srgb, var(--el-color-success) 50%, #fff);
+  --el-color-success-light-7: color-mix(in srgb, var(--el-color-success) 30%, #fff);
+  --el-color-success-light-8: color-mix(in srgb, var(--el-color-success) 20%, #fff);
+  --el-color-success-light-9: color-mix(in srgb, var(--el-color-success) 10%, #fff);
+  --el-color-success-dark-2: color-mix(in srgb, var(--el-color-success) 80%, #000);
+
+  --el-color-warning: var(--app-warning);
+  --el-color-warning-light-3: color-mix(in srgb, var(--el-color-warning) 70%, #fff);
+  --el-color-warning-light-5: color-mix(in srgb, var(--el-color-warning) 50%, #fff);
+  --el-color-warning-light-7: color-mix(in srgb, var(--el-color-warning) 30%, #fff);
+  --el-color-warning-light-8: color-mix(in srgb, var(--el-color-warning) 20%, #fff);
+  --el-color-warning-light-9: color-mix(in srgb, var(--el-color-warning) 10%, #fff);
+  --el-color-warning-dark-2: color-mix(in srgb, var(--el-color-warning) 80%, #000);
+
+  --el-color-danger: var(--app-danger);
+  --el-color-danger-light-3: color-mix(in srgb, var(--el-color-danger) 70%, #fff);
+  --el-color-danger-light-5: color-mix(in srgb, var(--el-color-danger) 50%, #fff);
+  --el-color-danger-light-7: color-mix(in srgb, var(--el-color-danger) 30%, #fff);
+  --el-color-danger-light-8: color-mix(in srgb, var(--el-color-danger) 20%, #fff);
+  --el-color-danger-light-9: color-mix(in srgb, var(--el-color-danger) 10%, #fff);
+  --el-color-danger-dark-2: color-mix(in srgb, var(--el-color-danger) 80%, #000);
+
+  --el-color-info: var(--app-info);
+  --el-color-info-light-3: color-mix(in srgb, var(--el-color-info) 70%, #fff);
+  --el-color-info-light-5: color-mix(in srgb, var(--el-color-info) 50%, #fff);
+  --el-color-info-light-7: color-mix(in srgb, var(--el-color-info) 30%, #fff);
+  --el-color-info-light-8: color-mix(in srgb, var(--el-color-info) 20%, #fff);
+  --el-color-info-light-9: color-mix(in srgb, var(--el-color-info) 10%, #fff);
+  --el-color-info-dark-2: color-mix(in srgb, var(--el-color-info) 80%, #000);
+
   --el-border-radius-base: 12px;
   --el-border-radius-round: 999px;
   --el-border-color: var(--app-border);
   --el-text-color-primary: var(--app-text);
   --el-text-color-regular: var(--app-muted);
-  --el-bg-color: var(--app-surface);  
+  --el-bg-color: var(--app-surface);
+  --el-bg-color-page: var(--app-bg);
+  --el-bg-color-overlay: var(--app-surface);
+  /* 菜单背景 */
+  --el-menu-bg-color: var(--app-surface);
+
+  /* 默认文字 */
+  --el-menu-text-color: var(--app-muted);
+
+  /* hover 背景 */
+  --el-menu-hover-bg-color: var(--app-purple-soft);
+
+  /* 激活文字 */
+  --el-menu-active-color: var(--app-purple);
+
+  /* 激活背景 */
+  --el-menu-active-bg-color: var(--app-purple-soft);
 }
 
 html,
@@ -55,22 +113,7 @@ body {
   border-radius: 999px;
 }
 
-.el-button--primary {
-  --el-button-bg-color: var(--app-purple);
-  --el-button-border-color: var(--app-purple);
-  --el-button-hover-bg-color: var(--app-purple);
-  --el-button-hover-border-color: var(--app-purple);
-}
-.el-button:focus-visible {
-  /* outline: 2px solid var(--app-purple); */
-  outline: none;
-  border: 1px solid var(--app-purple);
-}
-.el-button:hover{
-  color: var(--app-purple);
-  border-color: var(--app-purple);
-  background-color: var(--app-purple-soft);
-}
+
 
 /* Utilities */
 .u-muted {

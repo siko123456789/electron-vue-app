@@ -3,15 +3,24 @@ import App from './App.vue'
 import router from './router'
 import { pinia } from './stores'
 import { useSettingsStore } from './stores/settings'
+import { useAlertsStore } from './stores/alerts'
+import { watch } from 'vue'
 
 // 样式引入顺序很重要
 import 'element-plus/dist/index.css'
 import './assets/styles/publicClass.css'
-
+import '@/assets/iconfont/iconfont.css'
 import ElementPlus from 'element-plus'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 const app = createApp(App)
 app.use(ElementPlus)
+
+// 全局注册 Element Plus 图标组件
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
+
 app.use(pinia)
 app.use(router)
 app.mount('#app').$nextTick(() => {
@@ -20,7 +29,35 @@ app.mount('#app').$nextTick(() => {
     console.log(message)
   })
 
-  // Sync user settings to main process
+  // 来自主进程的应用警报(即使顶部栏未挂载，仍保持运行)
+  try {
+    const alerts = useAlertsStore()
+
+    const onAlertFromMain = (_event: any, payload: any) => {
+      if (!payload || typeof payload !== 'object') return
+      alerts.add({
+        id: payload.id ? String(payload.id) : undefined,
+        ts: payload.ts ? Number(payload.ts) : undefined,
+        variant: payload.variant === 'todo' ? 'todo' : 'risk',
+        title: String(payload.title || ''),
+        message: payload.message ? String(payload.message) : '',
+      })
+    }
+
+    window.ipcRenderer.on('app/alert', onAlertFromMain)
+
+    const syncUnreadCount = (count: number) => {
+      const ipc = (window as any)?.ipcRenderer
+      if (!ipc?.invoke) return
+      void ipc.invoke('app/set-unread-count', count)
+    }
+
+    watch(() => alerts.unreadCount, (count) => syncUnreadCount(count), { immediate: true })
+  } catch {
+    // ignore
+  }
+
+  // 将用户设置同步到主进程
   try {
     const settings = useSettingsStore()
     if ((window as any)?.ipcRenderer?.invoke) {

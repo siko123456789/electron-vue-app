@@ -2,7 +2,7 @@
 <template>
   <div class="app-layout">
     <div class="app-main">
-      <Topbar class="app-topbar" />
+      <Topbar v-if="showTopbar" class="app-topbar" />
       <main class="app-content">
         <router-view />
       </main>
@@ -11,7 +11,13 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import Topbar from './components/Topbar.vue'
+
+const route = useRoute()
+// Hide the global Topbar on public pages (e.g. login) where user isn't authenticated yet.
+const showTopbar = computed(() => route.meta?.requiresAuth !== false)
 </script>
 
 <style scoped>
@@ -35,7 +41,7 @@ import Topbar from './components/Topbar.vue'
 .app-content {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 18px 22px 28px;
+  /* padding: 18px 22px 28px; */
   overflow: auto;
 }
 </style>

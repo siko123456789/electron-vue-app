@@ -45,7 +45,9 @@
 	        <div v-if="roleName" class="role">{{ roleName }}</div>
 	      </div>
 	      <el-dropdown @command="handleDropdownCommand">
-	        <el-button circle :icon="SwitchButton" />
+	        <el-button circle>
+            <el-icon style="font-size: 18px;"><SwitchButton /></el-icon>
+          </el-button>
 	        <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item command="logout">退出登录</el-dropdown-item>
@@ -59,7 +61,6 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-  import { Aim, Bell, Document, HomeFilled, Lock, More, Warning, SwitchButton, Setting } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 	import { useAuthStore } from "@/stores/auth"
 	import { logout } from "@/api/login"

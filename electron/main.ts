@@ -12,6 +12,7 @@
  * Tray: 系统托盘模块
  */
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, net, screen, session, shell, Tray } from 'electron'
+import { Notification } from 'electron'
 import { fileURLToPath } from 'node:url'
 import * as path from 'node:path'
 import * as fs from 'node:fs/promises'
@@ -36,12 +37,22 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win: BrowserWindow | null // 主窗口引用
 let tray: Tray | null = null // 系统托盘引用
 let isQuitting = false // 是否正在退出应用
-let alertWin: BrowserWindow | null = null // 弹窗通知窗口引用
+let alertWins: BrowserWindow[] = [] // 弹窗通知窗口引用（右上角堆叠）
 let alertBeepTimer: NodeJS.Timeout | null = null // 警报蜂鸣定时器引用
 let lastUnreadCount = 0 // 最近一次未读数量
 let pendingUnreadCount: number | null = null // 主窗口未就绪时暂存未读数量
 let notificationsEnabled = true // 是否启用通知（弹窗/声音）
 let configFilePath = '' // 配置文件路径（userData 下）
+let lastAlertForTray: { title: string; message: string; ts: number } | null = null // 最近一次告警（用于托盘悬停提示）
+let testAlertTimer: NodeJS.Timeout | null = null // 测试告警定时器（仅用于测试）
+let trayBlinkTimer: NodeJS.Timeout | null = null // 托盘闪烁定时器（未读提示）
+let trayBlinkOn = false
+let trayIconNormal: Electron.NativeImage | null = null
+let trayIconAlert: Electron.NativeImage | null = null
+let trayPeekWin: BrowserWindow | null = null // 托盘悬停消息预览窗口（类似微信）
+let trayPeekHideTimer: NodeJS.Timeout | null = null
+const recentAlerts: Array<{ title: string; message: string; ts: number; variant: 'risk' | 'todo' }> = []
+const APP_ID = 'com.risk.app'
 
 // 通过安装器写入开机自启时，会使用 `--autostart` 启动参数（用于启动时默认隐藏到托盘）
 const startedFromAutoStart = process.argv.includes('--autostart')
@@ -133,13 +144,40 @@ function toggleMainWindow() {
 function createTray() {
   if (tray) return
 
-  tray = new Tray(getAppIcon())
+  trayIconNormal = getAppIcon()
+  trayIconAlert = nativeImage.createFromDataURL(
+    `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+        <circle cx="8" cy="8" r="7" fill="#DC2626"/>
+        <circle cx="8" cy="8" r="5" fill="#EF4444"/>
+      </svg>`
+    )}`
+  )
+
+  tray = new Tray(trayIconNormal)
   tray.setToolTip('风险治理')
   tray.on('click', () => toggleMainWindow())
+  tray.on('mouse-move', () => {
+    if (trayPeekHideTimer) {
+      clearTimeout(trayPeekHideTimer)
+      trayPeekHideTimer = null
+    }
+    showTrayPeek()
+  })
+  tray.on('mouse-leave', () => scheduleHideTrayPeek())
 
   const contextMenu = Menu.buildFromTemplate([
     { label: '显示主界面', click: () => showMainWindow() },
     { label: '隐藏主界面', click: () => hideMainWindow() },
+    { type: 'separator' },
+    {
+      label: '开始测试告警（每分钟）',
+      click: () => setTestAlertsEnabled(true),
+    },
+    {
+      label: '停止测试告警',
+      click: () => setTestAlertsEnabled(false),
+    },
     { type: 'separator' },
     {
       label: '退出',
@@ -150,6 +188,204 @@ function createTray() {
     },
   ])
   tray.setContextMenu(contextMenu)
+  refreshTrayTip()
+}
+
+function formatTrayTip() {
+  const unread = lastUnreadCount
+  return unread > 0 ? `风险治理（未读 ${unread}）` : '风险治理'
+}
+
+function refreshTrayTip() {
+  if (!tray) return
+  try {
+    tray.setToolTip(formatTrayTip())
+  } catch {
+    // ignore
+  }
+}
+
+function isMainWindowHidden() {
+  if (!win) return true
+  try {
+    return !win.isVisible() || win.isMinimized()
+  } catch {
+    return true
+  }
+}
+
+function scheduleHideTrayPeek() {
+  if (trayPeekHideTimer) clearTimeout(trayPeekHideTimer)
+  trayPeekHideTimer = setTimeout(() => hideTrayPeek(), 350)
+}
+
+function ensureTrayPeekWindow() {
+  if (trayPeekWin && !trayPeekWin.isDestroyed()) return trayPeekWin
+  trayPeekWin = new BrowserWindow({
+    width: 380,
+    height: 180,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    show: false,
+    backgroundColor: '#00000000',
+    webPreferences: {
+      contextIsolation: true,
+      sandbox: true,
+    },
+  })
+
+  trayPeekWin.on('blur', () => scheduleHideTrayPeek())
+  trayPeekWin.on('closed', () => {
+    trayPeekWin = null
+  })
+
+  return trayPeekWin
+}
+
+function buildTrayPeekHtml(items: Array<{ title: string; message: string; ts: number; variant: 'risk' | 'todo' }>) {
+  const safe = (s: string) => escapeHtml(String(s || ''))
+  const rows = items
+    .slice(0, 5)
+    .map((it, idx) => {
+      const theme = it.variant === 'todo' ? '#2563eb' : '#dc2626'
+      const title = safe(it.title)
+      return `
+        <div class="row" data-idx="${idx}">
+          <div class="icon" style="background:${theme}"></div>
+          <div class="title">${title}</div>
+        </div>
+      `
+    })
+    .join('')
+
+  return `<!doctype html>
+  <html lang="zh-CN">
+    <head>
+      <meta charset="utf-8" />
+      <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>peek</title>
+      <style>
+        :root{--bg:rgba(255,255,255,.98);--fg:#111827;--muted:#6b7280;--border:rgba(0,0,0,.10)}
+        *{box-sizing:border-box}
+        body{margin:0;background:transparent;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,'PingFang SC','Microsoft YaHei',sans-serif}
+        .wrap{padding:10px}
+        .card{background:var(--bg);border:1px solid var(--border);border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,.22);overflow:hidden}
+        .head{padding:10px 12px;border-bottom:1px solid var(--border);font-weight:800;color:var(--fg)}
+        .row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border)}
+        .row:last-child{border-bottom:none}
+        .icon{width:22px;height:22px;border-radius:8px;flex:0 0 auto;box-shadow:0 10px 18px rgba(0,0,0,.12)}
+        .title{min-width:0;flex:1;font-weight:800;color:var(--fg);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      </style>
+    </head>
+    <body>
+      <div class="wrap">
+        <div class="card">
+          <div class="head">风险治理（未读 ${lastUnreadCount}）</div>
+          ${rows || `<div class="row"><div class="col"><div class="title">暂无未读</div><div class="msg">没有可展示的消息。</div></div></div>`}
+        </div>
+      </div>
+    </body>
+  </html>`
+}
+
+function showTrayPeek() {
+  if (process.platform !== 'win32') return
+  if (!tray) return
+  if (!isMainWindowHidden()) return
+  if (lastUnreadCount <= 0) {
+    hideTrayPeek()
+    return
+  }
+
+  // 生成显示内容
+  const items = recentAlerts.slice(0, 5)
+  if (items.length === 0) {
+    items.push({
+      title: `未读消息`,
+      message: `你有 ${lastUnreadCount} 条未读消息`,
+      ts: Date.now(),
+      variant: 'risk',
+    })
+  }
+
+  const w = ensureTrayPeekWindow()
+  const bounds = tray.getBounds() // 获取托盘图标的边界位置
+  const { workArea } = screen.getPrimaryDisplay() // 获取屏幕工作区域
+
+  const height = 64 + items.length * 44 // 消息框高度（根据消息数量动态计算）
+  const width = 360 // 消息框宽度
+  const x = Math.min(workArea.x + workArea.width - width - 8, Math.max(workArea.x + 8, bounds.x + bounds.width - width))
+  const y = Math.max(workArea.y + 8, bounds.y - height - 8)
+
+  try { w.setBounds({ x, y, width, height }, false) } catch {}
+
+  const html = buildTrayPeekHtml(items)
+  w.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
+  try { w.showInactive() } catch { try { w.show() } catch {} }
+}
+
+function hideTrayPeek() {
+  if (trayPeekHideTimer) {
+    clearTimeout(trayPeekHideTimer)
+    trayPeekHideTimer = null
+  }
+  if (!trayPeekWin || trayPeekWin.isDestroyed()) return
+  try {
+    trayPeekWin.hide()
+  } catch {
+    // ignore
+  }
+}
+
+function stopTrayBlink() {
+  if (trayBlinkTimer) clearInterval(trayBlinkTimer)
+  trayBlinkTimer = null
+  trayBlinkOn = false
+  if (tray && trayIconNormal) {
+    try {
+      tray.setImage(trayIconNormal)
+    } catch {
+      // ignore
+    }
+  }
+}
+
+function startTrayBlink() {
+  if (!tray || trayBlinkTimer) return
+  trayBlinkTimer = setInterval(() => {
+    if (!tray) return
+    trayBlinkOn = !trayBlinkOn
+    const img = trayBlinkOn ? trayIconAlert : trayIconNormal
+    if (!img) return
+    try {
+      tray.setImage(img)
+    } catch {
+      // ignore
+    }
+  }, 700)
+}
+
+function showSystemNotification(title: string, body: string, sound: boolean) {
+  if (process.platform !== 'win32') return
+  if (!Notification.isSupported()) return
+  try {
+    new Notification({
+      title: title || '风险治理',
+      body: body || '请立即关注并处理。',
+      silent: !sound,
+      icon: getAppIcon(),
+    }).show()
+  } catch {
+    // ignore
+  }
 }
 
 /**
@@ -160,49 +396,55 @@ function setUnreadCount(count: number) {
   const next = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0
   const prev = lastUnreadCount
   lastUnreadCount = next
+  refreshTrayTip()
 
-  // macOS / Linux: badge（支持时显示在 Dock/启动器上）
-  try {
-    app.setBadgeCount(next)
-  } catch {
-    // ignore
-  }
-
-  // macOS: 从 0 -> >0 时，轻微跳动提示一次
-  try {
-    if (process.platform === 'darwin' && prev === 0 && next > 0) {
-      app.dock?.bounce?.('informational')
+  // -------------------------------
+  // 保证 recentAlerts 与未读数同步（保留多条消息，而不是覆盖第一条）
+  if (next > 0) {
+    if (recentAlerts.length === 0) {
+      // recentAlerts 为空，生成默认占位
+      recentAlerts.unshift({
+        title: `未读消息`,
+        message: `你有 ${next} 条未读消息`,
+        ts: Date.now(),
+        variant: 'risk',
+      })
+    } else {
+      // recentAlerts 非空，不覆盖已有消息
+      // 可以同步更新第一条的数量提示，但不覆盖内容
+      recentAlerts[0].message = recentAlerts[0].message.includes('你有')
+        ? `你有 ${next} 条未读消息`
+        : recentAlerts[0].message
     }
-  } catch {
-    // ignore
+  } else {
+    // 清空所有未读消息
+    recentAlerts.length = 0
+  }
+  // -------------------------------
+
+  if (process.platform === 'win32' && isMainWindowHidden()) {
+    if (next > 0) startTrayBlink()
+    else stopTrayBlink()
+  } else if (next === 0) {
+    stopTrayBlink()
   }
 
-  // Windows：任务栏 overlay + 闪烁
+  try { app.setBadgeCount(next) } catch {}
+
+  if (process.platform === 'darwin' && prev === 0 && next > 0) {
+    try { app.dock?.bounce?.('informational') } catch {}
+  }
+
+  // Windows 任务栏 overlay
   if (process.platform === 'win32' && win) {
     if (next > 0) {
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle cx="8" cy="8" r="6" fill="#DC2626"/></svg>`
       const overlay = nativeImage.createFromDataURL(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`)
-      try {
-        win.setOverlayIcon(overlay, `未读消息：${next}`)
-      } catch {
-        // ignore
-      }
-      try {
-        win.flashFrame(true)
-      } catch {
-        // ignore
-      }
+      try { win.setOverlayIcon(overlay, `未读消息：${next}`) } catch {}
+      try { win.flashFrame(true) } catch {}
     } else {
-      try {
-        win.setOverlayIcon(null, '')
-      } catch {
-        // ignore
-      }
-      try {
-        win.flashFrame(false)
-      } catch {
-        // ignore
-      }
+      try { win.setOverlayIcon(null, '') } catch {}
+      try { win.flashFrame(false) } catch {}
     }
   } else if (process.platform === 'win32' && !win) {
     pendingUnreadCount = next
@@ -224,6 +466,15 @@ function stopAlertBeep() {
 function startAlertBeep(intervalMs = 1200) {
   stopAlertBeep()
   alertBeepTimer = setInterval(() => shell.beep(), intervalMs)
+}
+
+function clearClosedAlertWins() {
+  alertWins = alertWins.filter((w) => !w.isDestroyed())
+}
+
+function stopAlertBeepIfNoWindows() {
+  clearClosedAlertWins()
+  if (alertWins.length === 0) stopAlertBeep()
 }
 
 /**
@@ -257,6 +508,12 @@ function showAlert(payload?: { title?: string; message?: string; variant?: 'risk
   const id = payload?.id || `${Date.now()}_${Math.random().toString(16).slice(2)}`
   const ts = payload?.ts || Date.now()
 
+  // 记录最近一次告警，用于托盘悬停提示
+  lastAlertForTray = { title, message: message || '请立即关注并处理。', ts }
+  recentAlerts.unshift({ title, message: message || '请立即关注并处理。', ts, variant })
+  recentAlerts.splice(10)
+  refreshTrayTip()
+
   // 主窗口已可见且聚焦时，优先走应用内提示，避免再弹一个置顶窗打断操作
   if (win && win.isVisible() && win.isFocused()) {
     // 发送消息到渲染进程用于应用内消息中心
@@ -287,22 +544,45 @@ function showAlert(payload?: { title?: string; message?: string; variant?: 'risk
     // ignore
   }
 
-  // 计算弹窗位置，放在屏幕右上角
-  const { workArea } = screen.getPrimaryDisplay()
-  const width = 420
-  const height = 220
-  const x = Math.max(workArea.x, workArea.x + workArea.width - width - 20)
-  const y = Math.max(workArea.y, workArea.y + 20)
+  // 系统通知（Windows Toast）暂不默认启用：避免与自绘右上角弹窗重复
 
-  // 如果已有弹窗则先关闭
-  if (alertWin) {
-    alertWin.close()
-    alertWin = null
+  // Windows：仅在主窗口隐藏时弹出系统托盘气泡提示
+  if (process.platform === 'win32' && tray && isMainWindowHidden()) {
+    try {
+      const balloonTitle = title || (variant === 'todo' ? '待办提醒' : '风险告警')
+      const balloonContent = (message || '请立即关注并处理。').slice(0, 300)
+      ;(tray as any).displayBalloon?.({
+        icon: getAppIcon(),
+        title: balloonTitle,
+        content: balloonContent,
+      })
+    } catch {
+      // ignore
+    }
   }
-  stopAlertBeep()
+
+  // 计算弹窗位置，放在屏幕右上角（堆叠）
+  const { workArea } = screen.getPrimaryDisplay()
+  const width = 360
+  const height = 92
+  const x = Math.max(workArea.x, workArea.x + workArea.width - width - 20)
+
+  clearClosedAlertWins()
+  const maxStack = 3
+  while (alertWins.length >= maxStack) {
+    try {
+      alertWins[0]?.close()
+    } catch {
+      // ignore
+    }
+    alertWins.shift()
+  }
+
+  const idx = alertWins.length
+  const y = Math.max(workArea.y, workArea.y + 20 + idx * (height + 10))
 
   // 创建新的弹窗窗口
-  alertWin = new BrowserWindow({
+  const alertWin = new BrowserWindow({
     width,
     height,
     x,
@@ -321,6 +601,7 @@ function showAlert(payload?: { title?: string; message?: string; variant?: 'risk
       preload: path.join(MAIN_DIST, 'preload.mjs'), // 预加载脚本
     },
   })
+  alertWins.push(alertWin)
 
   // 设置窗口属性
   alertWin.setAlwaysOnTop(true, 'screen-saver')
@@ -333,51 +614,134 @@ function showAlert(payload?: { title?: string; message?: string; variant?: 'risk
   const theme = variant === 'todo' ? '#2563eb' : '#dc2626'
 
   // 构建弹窗HTML内容
-  const html = `<!doctype html>
+const html = `<!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${safeTitle}</title>
-    <style>
-      :root{--bg:#0b1220;--fg:#e5e7eb;--muted:#9ca3af;--accent:${theme};--border:rgba(255,255,255,.12)}
-      *{box-sizing:border-box}
-      body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--fg)}
-      .wrap{height:100%;padding:14px 14px 12px}
-      .head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-      .badge{display:inline-flex;align-items:center;gap:8px}
-      .dot{width:10px;height:10px;border-radius:999px;background:var(--accent);box-shadow:0 0 0 4px rgba(255,255,255,.06)}
-      .title{font-weight:700;letter-spacing:.2px}
-      .close{appearance:none;border:1px solid var(--border);background:transparent;color:var(--fg);border-radius:10px;padding:4px 10px;cursor:pointer}
-      .msg{margin-top:10px;border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.04);color:var(--fg);line-height:1.5;white-space:pre-wrap;max-height:120px;overflow:auto}
-      .foot{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-      .hint{font-size:12px;color:var(--muted)}
-      .btn{appearance:none;border:none;background:var(--accent);color:white;border-radius:12px;padding:8px 12px;cursor:pointer;font-weight:600}
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <div class="head">
-        <div class="badge">
-          <span class="dot"></span>
-          <div class="title">${safeTitle}</div>
-        </div>
-        <button class="close" id="x">关闭</button>
-      </div>
-      <div class="msg" id="m">${safeMessage || '请立即关注并处理。'}</div>
-      <div class="foot">
-        <div class="hint">此弹窗置顶显示（不易被浏览器遮挡）</div>
-        <button class="btn" id="ok">我知道了</button>
-      </div>
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';" />
+
+<style>
+html,body{
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  background:transparent;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,'PingFang SC','Microsoft YaHei',sans-serif;
+}
+
+/* 外层容器 */
+.wrap{
+  padding:10px;
+}
+
+/* 卡片 */
+.notification{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+
+  width:100%;
+  box-sizing:border-box;
+
+  padding:12px 14px;
+
+  background:#fff;
+  border-radius:10px;
+
+  box-shadow:0 8px 24px rgba(0,0,0,0.15);
+
+  transform:translateX(40px);
+  opacity:0;
+
+  transition:all .25s ease;
+}
+
+/* 出现动画 */
+.show{
+  transform:translateX(0);
+  opacity:1;
+}
+
+/* icon */
+.icon{
+  width:32px;
+  height:32px;
+  border-radius:8px;
+  background:${theme};
+  flex-shrink:0;
+}
+
+/* 内容 */
+.content{
+  flex:1;
+  min-width:0;
+}
+
+/* 标题 */
+.title{
+  font-size:14px;
+  font-weight:600;
+  color:#111;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* 内容 */
+.message{
+  font-size:13px;
+  color:#666;
+  margin-top:4px;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <div class="notification" id="card">
+    <div class="icon"></div>
+    <div class="content">
+      <div class="title">${safeTitle}</div>
+      <div class="message">${safeMessage}</div>
     </div>
-    <script>
-      const close = () => window.close();
-      document.getElementById('x').addEventListener('click', close);
-      document.getElementById('ok').addEventListener('click', close);
-      window.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
-    </script>
-  </body>
+  </div>
+</div>
+
+<script>
+
+const card = document.getElementById("card")
+
+/* 滑入动画 */
+setTimeout(()=>{
+  card.classList.add("show")
+},20)
+
+let timer
+
+function startClose(){
+  timer=setTimeout(()=>{
+    window.close()
+  },8000)
+}
+
+function stopClose(){
+  clearTimeout(timer)
+}
+
+card.addEventListener("mouseenter",stopClose)
+card.addEventListener("mouseleave",startClose)
+
+startClose()
+
+</script>
+
+</body>
 </html>`
 
   // 加载弹窗内容
@@ -387,18 +751,27 @@ function showAlert(payload?: { title?: string; message?: string; variant?: 'risk
   alertWin.once('ready-to-show', () => {
     alertWin?.show()
     alertWin?.focus()
-    if (sound) shell.beep()
-    if (sound) startAlertBeep() // 如果启用了声音，则开始周期性蜂鸣
+    if (sound) {
+      try {
+        shell.beep()
+      } catch {
+        // ignore
+      }
+      if (!alertBeepTimer) startAlertBeep() // 如果启用了声音，则开始周期性蜂鸣
+    }
   })
 
-  // 监听弹窗关闭事件
-  alertWin.on('closed', () => {
-    stopAlertBeep()
-    alertWin = null
-  })
+  // 自动关闭，避免一直占用右上角
+  setTimeout(() => {
+    try {
+      if (!alertWin.isDestroyed()) alertWin.close()
+    } catch {
+      // ignore
+    }
+  }, 8_000)
 
-  // 监听弹窗关闭事件
-  alertWin.on('close', () => stopAlertBeep())
+  alertWin.on('closed', () => stopAlertBeepIfNoWindows())
+  alertWin.on('close', () => stopAlertBeepIfNoWindows())
 }
 
 function createWindow() {
@@ -473,14 +846,53 @@ app.on('activate', () => {
   }
 })
 
-// 监听应用即将退出事件
+  // 监听应用即将退出事件
 app.on('before-quit', () => {
   isQuitting = true // 设置退出标志
   stopAlertBeep()   // 停止警报蜂鸣
+  if (testAlertTimer) clearInterval(testAlertTimer)
+  testAlertTimer = null
+  stopTrayBlink()
 })
+
+function setTestAlertsEnabled(enabled: boolean) {
+  const on = Boolean(enabled)
+  if (on) {
+    if (testAlertTimer) return
+    notificationsEnabled = true
+    let tick = 0
+    const sendOne = () => {
+      if (!isMainWindowHidden()) return
+      tick += 1
+      const kind = tick % 2 === 1 ? 'vuln' : 'port'
+      const now = new Date().toLocaleString()
+      const alertTitle = kind === 'vuln' ? '新发现关键漏洞' : '新发现高危端口'
+      const alertMessage =
+        kind === 'vuln'
+          ? `检测到关键漏洞需要立即处理。\n时间：${now}\n建议：尽快修复并验证。`
+          : `检测到高危端口暴露风险。\n时间：${now}\n建议：立即核查端口来源并限制访问。`
+      showAlert({ variant: 'risk', title: alertTitle, message: alertMessage, sound: false })
+    }
+
+    // 启用后先来一条，方便立刻验证
+    setTimeout(sendOne, 1000)
+    testAlertTimer = setInterval(sendOne, 60_000)
+  } else {
+    if (testAlertTimer) clearInterval(testAlertTimer)
+    testAlertTimer = null
+  }
+}
 
 // 应用准备就绪后的初始化
 app.whenReady().then(() => {
+  if (process.platform === 'win32') {
+    try {
+      app.setAppUserModelId(APP_ID)
+    } catch {
+      // ignore
+    }
+  }
+
   // 读取本地配置（userData 下）
   configFilePath = path.join(app.getPath('userData'), 'app-config.json')
 
@@ -562,6 +974,10 @@ app.whenReady().then(() => {
     await saveAppConfig({ notificationsEnabled })
     return notificationsEnabled
   })
+  ipcMain.handle('app/test-alerts/set-enabled', (_event, enabled) => {
+    setTestAlertsEnabled(Boolean(enabled))
+    return Boolean(testAlertTimer)
+  })
   ipcMain.handle('app/quit', () => {
     isQuitting = true
     app.quit()
@@ -571,4 +987,9 @@ app.whenReady().then(() => {
 
   // 创建主窗口
   createWindow()
+
+  // 测试：每分钟自动推送一条告警（仅当窗口隐藏时），用于验证托盘气泡/右上角弹窗/未读数联动
+  if (process.argv.includes('--test-alerts')) {
+    setTestAlertsEnabled(true)
+  }
 })

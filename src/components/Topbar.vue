@@ -64,7 +64,7 @@
         </div>
       </div>
 
-      <div class="right">
+      <div v-if="authStore.isLoggedIn" class="right">
         <el-button class="icon-btn" text @click="openDrawer">
           <el-badge
             :value="alerts.unreadCount"
@@ -87,7 +87,7 @@
         <div class="divider" />
         <el-dropdown @command="handleUserCommand" placement="bottom-end">
           <el-button class="user-menu-btn" text>
-            <el-icon style="color:#333">
+            <el-icon style="color:#333;font-size: 16px;">
               <User />
             </el-icon>
           </el-button>
@@ -104,8 +104,16 @@
                     </div>
                   </div>
                 </div>
-                <el-dropdown-item command="settings" :icon="Setting">设置</el-dropdown-item>
-                <el-dropdown-item command="logout" :icon="SwitchButton">退出登录</el-dropdown-item>
+                <el-dropdown-item command="settings">
+                  <el-icon style="margin-right: 6px">
+                    <Setting />
+                  </el-icon>设置
+                </el-dropdown-item>
+                <el-dropdown-item command="logout">
+                  <el-icon style="margin-right: 6px">
+                    <SwitchButton />
+                  </el-icon>退出登录
+                </el-dropdown-item>
               </el-dropdown-menu>
             </div>
           </template>
@@ -113,11 +121,13 @@
       </div>
     </header>
 
-    <el-drawer v-model="drawerOpen" title="消息中心" size="420px">
+    <el-drawer v-if="authStore.isLoggedIn" v-model="drawerOpen" title="消息中心" size="50%">
       <div class="drawer-actions">
         <el-button size="small" @click="alerts.markAllRead()">全部已读</el-button>
         <el-button size="small" type="danger" plain @click="alerts.clearAll()">清空</el-button>
         <el-button size="small" type="primary" plain @click="demoRisk">测试告警</el-button>
+        <el-button size="small" type="success" plain @click="startAutoTest">自动测试(1分钟)</el-button>
+        <el-button size="small" plain @click="stopAutoTest">停止自动测试</el-button>
       </div>
 
       <div v-if="alerts.items.length === 0" class="drawer-empty">
@@ -144,19 +154,11 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Bell,
-  HomeFilled,
-  Lock,
-  Setting,
-  SwitchButton,
-  User,
-} from "@element-plus/icons-vue";
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { useAlertsStore } from "@/stores/alerts";
-import { useAuthStore } from "@/stores/auth";
-import type { UserInfo } from "@/stores/auth";
-import { ElMessage, ElMessageBox } from "element-plus";
+	import { computed, ref } from "vue";
+	import { useAlertsStore } from "@/stores/alerts";
+	import { useAuthStore } from "@/stores/auth";
+	import type { UserInfo } from "@/stores/auth";
+	import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter, useRoute } from "vue-router";
 import { logout } from "@/api/login";
 
@@ -228,36 +230,23 @@ function demoRisk() {
   });
 }
 
-function syncUnreadCount(count: number) {
-  const ipc = (window as any)?.ipcRenderer;
-  if (!ipc?.invoke) return;
-  void ipc.invoke("app/set-unread-count", count);
+function startAutoTest() {
+  try {
+    void window.ipcRenderer.invoke("app/test-alerts/set-enabled", true);
+    ElMessage.success("已开启自动测试（每分钟，窗口隐藏时弹出）");
+  } catch {
+    ElMessage.error("开启自动测试失败");
+  }
 }
 
-watch(
-  () => alerts.unreadCount,
-  count => syncUnreadCount(count),
-  { immediate: true }
-);
-
-function onAlertFromMain(_event: any, payload: any) {
-  if (!payload || typeof payload !== "object") return;
-  alerts.add({
-    id: payload.id ? String(payload.id) : undefined,
-    ts: payload.ts ? Number(payload.ts) : undefined,
-    variant: payload.variant === "todo" ? "todo" : "risk",
-    title: String(payload.title || ""),
-    message: payload.message ? String(payload.message) : ""
-  });
+function stopAutoTest() {
+  try {
+    void window.ipcRenderer.invoke("app/test-alerts/set-enabled", false);
+    ElMessage.success("已停止自动测试");
+  } catch {
+    ElMessage.error("停止自动测试失败");
+  }
 }
-
-onMounted(() => {
-  window.ipcRenderer.on("app/alert", onAlertFromMain);
-});
-
-onBeforeUnmount(() => {
-  window.ipcRenderer.off("app/alert", onAlertFromMain as any);
-});
 
 // 处理用户菜单命令
 const handleUserCommand = async (command: string) => {
@@ -335,7 +324,7 @@ const handleUserCommand = async (command: string) => {
 }
 
 .brand:hover {
-  background: rgba(124, 58, 237, 0.08);
+  background: color-mix(in srgb, var(--el-color-primary) 5%, #fff);
 }
 
 .logo {
@@ -346,7 +335,7 @@ const handleUserCommand = async (command: string) => {
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  background: linear-gradient(135deg, #9810fa, #4f46e5);
   box-shadow: 0 10px 18px rgba(79, 70, 229, 0.18);
 }
 
@@ -397,12 +386,12 @@ const handleUserCommand = async (command: string) => {
   min-width: 100%;
   display: flex;
   align-items: center;
-  --el-menu-bg-color: transparent;
-  --el-menu-hover-bg-color: rgba(79, 70, 229, 0.12);
+  /* --el-menu-bg-color: transparent;
+  --el-menu-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 10%, #fff);
   --el-menu-text-color: var(--app-muted);
   --el-menu-hover-text-color: var(--app-text);
   --el-menu-active-color: #4f46e5;
-  --el-menu-border-color: transparent;
+  --el-menu-border-color: transparent; */
 }
 
 .top-nav-menu :deep(.el-menu-item) {
@@ -418,17 +407,17 @@ const handleUserCommand = async (command: string) => {
   border-bottom: none !important;
 }
 .top-nav-menu :deep(.el-menu-item:hover) {
-  background: rgba(79, 70, 229, 0.12) !important;
+  background: color-mix(in srgb, var(--el-color-primary) 5%, #fff) !important;
   color: var(--app-text);
 }
 
 .top-nav-menu :deep(.el-menu-item.is-active) {
   color: #4f46e5;
-  background: rgba(79, 70, 229, 0.12) !important;
+  background: color-mix(in srgb, var(--el-color-primary) 5%, #fff) !important;
 }
 
 .top-nav-menu :deep(.el-menu-item.is-active:hover) {
-  background: rgba(79, 70, 229, 0.12) !important;
+  background: color-mix(in srgb, var(--el-color-primary) 5%, #fff) !important;
   color: #4f46e5;
 }
 

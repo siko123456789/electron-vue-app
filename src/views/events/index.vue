@@ -24,6 +24,7 @@ const title = computed(() => (route.meta?.title as string) || (route.name as str
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 16px;
 }
 
 .header {

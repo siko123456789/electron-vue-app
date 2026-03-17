@@ -1,0 +1,338 @@
+{
+  "id": "5138728",
+  "name": "智能风险管理",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "3020011",
+      "name": "二级-资产漏洞扫描报表",
+      "font_class": "erji-zichanloudongsaomiaobaobiao",
+      "unicode": "eaa4",
+      "unicode_decimal": 60068
+    },
+    {
+      "icon_id": "5249010",
+      "name": "漏洞",
+      "font_class": "loudong1",
+      "unicode": "e625",
+      "unicode_decimal": 58917
+    },
+    {
+      "icon_id": "32096252",
+      "name": "信号",
+      "font_class": "xinhao",
+      "unicode": "e6b4",
+      "unicode_decimal": 59060
+    },
+    {
+      "icon_id": "40909166",
+      "name": "组件",
+      "font_class": "zujian",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "11013005",
+      "name": "显微镜",
+      "font_class": "xianweijing",
+      "unicode": "e643",
+      "unicode_decimal": 58947
+    },
+    {
+      "icon_id": "1304893",
+      "name": "邮件",
+      "font_class": "youjian",
+      "unicode": "e624",
+      "unicode_decimal": 58916
+    },
+    {
+      "icon_id": "6071377",
+      "name": "基础图标-XC-消息",
+      "font_class": "jichutubiao-XC-xiaoxi",
+      "unicode": "e626",
+      "unicode_decimal": 58918
+    },
+    {
+      "icon_id": "8692132",
+      "name": "盾牌 (问号)",
+      "font_class": "dunpaiwenhao",
+      "unicode": "e603",
+      "unicode_decimal": 58883
+    },
+    {
+      "icon_id": "13476356",
+      "name": "忽略",
+      "font_class": "shibai",
+      "unicode": "e604",
+      "unicode_decimal": 58884
+    },
+    {
+      "icon_id": "13690926",
+      "name": "时间",
+      "font_class": "BasicIcons-all-",
+      "unicode": "e862",
+      "unicode_decimal": 59490
+    },
+    {
+      "icon_id": "17839636",
+      "name": "执行完毕",
+      "font_class": "tubiaozhizuosvg-07",
+      "unicode": "e605",
+      "unicode_decimal": 58885
+    },
+    {
+      "icon_id": "20009319",
+      "name": "terminal终端",
+      "font_class": "terminalzhongduan",
+      "unicode": "e6ea",
+      "unicode_decimal": 59114
+    },
+    {
+      "icon_id": "22624157",
+      "name": "忽略",
+      "font_class": "icon_ignore",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    },
+    {
+      "icon_id": "24865499",
+      "name": "漏洞",
+      "font_class": "loudong",
+      "unicode": "e63e",
+      "unicode_decimal": 58942
+    },
+    {
+      "icon_id": "27221472",
+      "name": "历史时间",
+      "font_class": "lishishijian",
+      "unicode": "e7de",
+      "unicode_decimal": 59358
+    },
+    {
+      "icon_id": "36940812",
+      "name": "分析",
+      "font_class": "zujianyuzhiyong",
+      "unicode": "e651",
+      "unicode_decimal": 58961
+    },
+    {
+      "icon_id": "37053331",
+      "name": "立即执行",
+      "font_class": "lijizhihang",
+      "unicode": "e6c8",
+      "unicode_decimal": 59080
+    },
+    {
+      "icon_id": "39216858",
+      "name": "下载报告",
+      "font_class": "xiazaibaogao",
+      "unicode": "e6e4",
+      "unicode_decimal": 59108
+    },
+    {
+      "icon_id": "12321462",
+      "name": "拓扑图",
+      "font_class": "tuoputu",
+      "unicode": "e65d",
+      "unicode_decimal": 58973
+    },
+    {
+      "icon_id": "25635214",
+      "name": "下载",
+      "font_class": "xiazai",
+      "unicode": "e652",
+      "unicode_decimal": 58962
+    },
+    {
+      "icon_id": "32731459",
+      "name": "互联网",
+      "font_class": "hulianwang",
+      "unicode": "e748",
+      "unicode_decimal": 59208
+    },
+    {
+      "icon_id": "34180403",
+      "name": "芯片_线性",
+      "font_class": "xinpian_xianxing",
+      "unicode": "e658",
+      "unicode_decimal": 58968
+    },
+    {
+      "icon_id": "35899401",
+      "name": "调节",
+      "font_class": "tiaojie1",
+      "unicode": "e659",
+      "unicode_decimal": 58969
+    },
+    {
+      "icon_id": "38289593",
+      "name": "调节",
+      "font_class": "tiaojie2",
+      "unicode": "e669",
+      "unicode_decimal": 58985
+    },
+    {
+      "icon_id": "40696560",
+      "name": "关系拓扑",
+      "font_class": "guanxituopu",
+      "unicode": "e623",
+      "unicode_decimal": 58915
+    },
+    {
+      "icon_id": "41085427",
+      "name": "芯片-copy",
+      "font_class": "xinpian",
+      "unicode": "e602",
+      "unicode_decimal": 58882
+    },
+    {
+      "icon_id": "11761167",
+      "name": "风险报警_line",
+      "font_class": "risk-alarm_line",
+      "unicode": "e72d",
+      "unicode_decimal": 59181
+    },
+    {
+      "icon_id": "46850859",
+      "name": "版本",
+      "font_class": "banben",
+      "unicode": "e6ee",
+      "unicode_decimal": 59118
+    },
+    {
+      "icon_id": "46959432",
+      "name": "Group 1321319309",
+      "font_class": "a-Group1321319309",
+      "unicode": "e6f0",
+      "unicode_decimal": 59120
+    },
+    {
+      "icon_id": "46959433",
+      "name": "Group 1321319308",
+      "font_class": "a-Group1321319308",
+      "unicode": "e6f1",
+      "unicode_decimal": 59121
+    },
+    {
+      "icon_id": "577338",
+      "name": "更多",
+      "font_class": "gengduo",
+      "unicode": "e73a",
+      "unicode_decimal": 59194
+    },
+    {
+      "icon_id": "677569",
+      "name": "放大镜",
+      "font_class": "fangdajing",
+      "unicode": "e617",
+      "unicode_decimal": 58903
+    },
+    {
+      "icon_id": "4942654",
+      "name": "筛选",
+      "font_class": "shaixuan",
+      "unicode": "e619",
+      "unicode_decimal": 58905
+    },
+    {
+      "icon_id": "5438085",
+      "name": "盾牌",
+      "font_class": "dunpai",
+      "unicode": "e657",
+      "unicode_decimal": 58967
+    },
+    {
+      "icon_id": "7708023",
+      "name": "眼睛_开",
+      "font_class": "yanjing_kai",
+      "unicode": "e61b",
+      "unicode_decimal": 58907
+    },
+    {
+      "icon_id": "9114424",
+      "name": "72警告",
+      "font_class": "jinggao",
+      "unicode": "e647",
+      "unicode_decimal": 58951
+    },
+    {
+      "icon_id": "10416822",
+      "name": "structure",
+      "font_class": "structure",
+      "unicode": "e698",
+      "unicode_decimal": 59032
+    },
+    {
+      "icon_id": "10715440",
+      "name": "锁",
+      "font_class": "suo",
+      "unicode": "e636",
+      "unicode_decimal": 58934
+    },
+    {
+      "icon_id": "13040742",
+      "name": "筛选",
+      "font_class": "shaixuan1",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "14063500",
+      "name": "盾牌",
+      "font_class": "dunpai1",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "16323145",
+      "name": "闪电",
+      "font_class": "shandian_2",
+      "unicode": "e70f",
+      "unicode_decimal": 59151
+    },
+    {
+      "icon_id": "20587660",
+      "name": "感叹号",
+      "font_class": "gantanhao",
+      "unicode": "e64b",
+      "unicode_decimal": 58955
+    },
+    {
+      "icon_id": "24056832",
+      "name": "调节",
+      "font_class": "tiaojie",
+      "unicode": "e70c",
+      "unicode_decimal": 59148
+    },
+    {
+      "icon_id": "38242433",
+      "name": "靶标设备",
+      "font_class": "babiaoshebei",
+      "unicode": "eee4",
+      "unicode_decimal": 61156
+    },
+    {
+      "icon_id": "42750354",
+      "name": "波动",
+      "font_class": "bodong",
+      "unicode": "e6e3",
+      "unicode_decimal": 59107
+    },
+    {
+      "icon_id": "44864370",
+      "name": "icon-盾牌-感叹号",
+      "font_class": "icon-dunpai-gantanhao",
+      "unicode": "e7c8",
+      "unicode_decimal": 59336
+    },
+    {
+      "icon_id": "46184343",
+      "name": "盾牌-copy",
+      "font_class": "hyjf-dunpai",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    }
+  ]
+}
