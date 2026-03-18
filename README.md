@@ -1,5 +1,5 @@
 # electron-vue-app
-风险治理平台
+风险监控与治理桌面应用
 
 ![Electron](https://img.shields.io/badge/Electron-47848F?logo=electron)
 ![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?logo=vuedotjs)
