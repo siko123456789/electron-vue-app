@@ -5,7 +5,6 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { pinia } from '@/stores'
-import { ElMessage } from 'element-plus'
 
 // 存储 API 基础 URL 的 localStorage 键名
 const SETTINGS_API_BASE_KEY = 'apiBase'
@@ -18,6 +17,10 @@ const API_CACHE_MAX_KEYS = 100
 
 // 离线操作队列的 localStorage 键名
 const OFFLINE_QUEUE_KEY = 'offline_ops_v1'
+
+// Electron IPC mode: persist cookies from Set-Cookie and send them via Cookie header
+// because renderer devtools can't inspect net.request headers/cookies easily.
+const IPC_COOKIE_KEY = 'ipc_cookie_v1'
 
 /**
  * 离线操作类型定义
@@ -46,6 +49,114 @@ function joinUrl(base: string, path: string): string {
   const b = (base || '').replace(/\/+$/, '')
   const p = (path || '').startsWith('/') ? path : `/${path || ''}`
   return `${b}${p}`
+}
+
+function applyAuthHeaders(headers: Record<string, any>, token: string | null) {
+  const raw = String(token || '').trim()
+  if (!raw) return
+  const bare = raw.replace(/^Bearer\s+/i, '').trim()
+  headers.Authorization = /^Bearer\s+/i.test(raw) ? raw : `Bearer ${raw}`
+  headers.token = bare
+  headers['X-Token'] = bare
+}
+
+function extractTokenFromHeaders(headers: any): string {
+  if (!headers || typeof headers !== 'object') return ''
+
+  const pick = (key: string) => {
+    const v = (headers as any)[key]
+    if (Array.isArray(v)) return String(v[0] || '').trim()
+    return String(v || '').trim()
+  }
+
+  const directCandidates = [
+    pick('authorization'),
+    pick('Authorization'),
+    pick('token'),
+    pick('Token'),
+    pick('x-token'),
+    pick('X-Token'),
+    pick('x-auth-token'),
+    pick('X-Auth-Token'),
+    pick('access-token'),
+    pick('Access-Token'),
+    pick('x-access-token'),
+    pick('X-Access-Token'),
+  ]
+    .map((v) => String(v || '').trim())
+    .filter(Boolean)
+
+  const direct = (directCandidates[0] || '').replace(/^Bearer\s+/i, '').trim()
+  if (direct) return direct
+
+  // Try to parse token from Set-Cookie (best-effort; works when backend stores token in a readable cookie).
+  const rawSetCookie = (headers as any)['set-cookie'] ?? (headers as any)['Set-Cookie']
+  const cookies: string[] = Array.isArray(rawSetCookie)
+    ? rawSetCookie.map((c: any) => String(c || ''))
+    : String(rawSetCookie || '')
+        .split(/,(?=[^;]+=[^;]+)/g)
+        .map((c) => c.trim())
+        .filter(Boolean)
+
+  const names = ['token', 'access_token', 'accessToken', 'auth_token', 'authorization', 'jwt']
+  for (const cookie of cookies) {
+    const first = String(cookie || '').split(';')[0] || ''
+    const eq = first.indexOf('=')
+    if (eq <= 0) continue
+    const name = first.slice(0, eq).trim()
+    const value = first.slice(eq + 1).trim()
+    if (!value) continue
+    if (names.some((n) => n.toLowerCase() === name.toLowerCase())) return value
+  }
+
+  return ''
+}
+
+function extractCookieHeaderFromHeaders(headers: any): string {
+  if (!headers || typeof headers !== 'object') return ''
+  const raw = (headers as any)['set-cookie'] ?? (headers as any)['Set-Cookie']
+  const setCookies: string[] = Array.isArray(raw)
+    ? raw.map((c: any) => String(c || ''))
+    : String(raw || '')
+        .split(/,(?=[^;]+=[^;]+)/g)
+        .map((c) => c.trim())
+        .filter(Boolean)
+
+  if (!setCookies.length) return ''
+
+  // Keep the latest value per cookie name.
+  const jar = new Map<string, string>()
+  for (const cookie of setCookies) {
+    const first = String(cookie || '').split(';')[0] || ''
+    const eq = first.indexOf('=')
+    if (eq <= 0) continue
+    const name = first.slice(0, eq).trim()
+    const value = first.slice(eq + 1).trim()
+    if (!name || !value) continue
+    jar.set(name, value)
+  }
+
+  const parts: string[] = []
+  for (const [name, value] of jar.entries()) parts.push(`${name}=${value}`)
+  return parts.join('; ')
+}
+
+function getStoredIpcCookie(): string {
+  try {
+    return (localStorage.getItem(IPC_COOKIE_KEY) || '').trim()
+  } catch {
+    return ''
+  }
+}
+
+function storeIpcCookie(nextCookieHeader: string) {
+  const next = String(nextCookieHeader || '').trim()
+  if (!next) return
+  try {
+    localStorage.setItem(IPC_COOKIE_KEY, next)
+  } catch {
+    // ignore
+  }
 }
 
 function toQuery(params?: Record<string, any>): string {
@@ -238,47 +349,20 @@ export function clearApiCache() {
  * @returns 处理后的数据
  */
 function normalizeResponseData(data: any) {
-  if (data && typeof data === 'object') {
-    const code = Number(data.code)
+  if (data && typeof data === 'object' && 'code' in data) {
+    const code = (data as any).code
+    // 如果 code 为 200 或 0，认为请求成功
+    if (code === 200 || code === 0) return data
 
-    // ✅ 登录失效统一处理
-    if (code === 1004) {
-      handleLoginExpired()
-      // ❗这里不能 return 正常数据
-      return Promise.reject(new Error('登录已过期'))
-    }
-
-    return data
+    const message = (data as any).message || (data as any).msg
+    console.error('响应错误:', message)
+    if (Number(code) === 1004) handleUnauthorized()
+    throw new Error(message || '请求失败')
   }
 
   return data
 }
 
-
-let isHandlingLoginExpired = false
-
-function handleLoginExpired() {
-  if (isHandlingLoginExpired) return
-  isHandlingLoginExpired = true
-
-  try {
-    const authStore = useAuthStore(pinia)
-    authStore.clearAuth()
-  } catch {}
-
-  const isLoginPage = location.hash.includes('/login')
-
-  if (!isLoginPage) {
-    ElMessage.error('未授权，请重新登录')
-
-    // ✅ 跳转登录页
-    location.hash = '#/login'
-  }
-
-  setTimeout(() => {
-    isHandlingLoginExpired = false
-  }, 1000)
-} 
 /**
  * 处理未授权情况
  * 清除认证信息并跳转到登录页面
@@ -290,7 +374,11 @@ function handleUnauthorized() {
   } catch {
     // ignore
   }
-  if (location.hash !== '#/login') location.hash = '#/login'
+
+  // Avoid redirect loop when we're already on the login page (hash router).
+  const hash = String(location.hash || '')
+  const isLoginPage = hash.includes('/login')
+  if (!isLoginPage) location.hash = '#/login'
 }
 
 /**
@@ -315,12 +403,15 @@ async function requestViaIpc(method: string, url: string, params?: any, data?: a
   const headers: Record<string, string> = {
     'Content-Type': 'application/json;charset=utf-8',
   }
-  if (token) headers.Authorization = `Bearer ${token}`
+  applyAuthHeaders(headers, token)
+  const storedCookie = getStoredIpcCookie()
+  if (storedCookie) headers.Cookie = storedCookie
 
   const body = method === 'GET' || method === 'DELETE' ? null : (data !== undefined ? JSON.stringify(data) : null)
   try {
     const res = await ipc.invoke('http-request', { method, url: fullUrl, headers, body })
     const status = Number(res?.status || 0)
+    const resHeaders = res?.headers
 
     let parsed: any = res?.data
     if (typeof parsed === 'string') {
@@ -328,6 +419,25 @@ async function requestViaIpc(method: string, url: string, params?: any, data?: a
         parsed = JSON.parse(parsed)
       } catch {
         // 保持原始文本
+      }
+    }
+
+    // Persist cookies from Set-Cookie so subsequent IPC requests can send Cookie header explicitly.
+    const cookieHeader = extractCookieHeaderFromHeaders(resHeaders)
+    if (cookieHeader) storeIpcCookie(cookieHeader)
+
+    // Many backends do not include token in response body; they send it in headers/cookies.
+    if (String(url || '').includes('/user/login')) {
+      // Help debug in renderer console (devtools can't see net.request headers easily).
+      try { console.log('[login] ipc response headers:', resHeaders) } catch {}
+
+      const headerToken = extractTokenFromHeaders(resHeaders)
+      if (headerToken) {
+        try { localStorage.setItem('token', headerToken) } catch {}
+        if (parsed && typeof parsed === 'object') {
+          if (parsed.data && typeof parsed.data === 'object' && !(parsed.data as any).token) (parsed.data as any).token = headerToken
+          else if (!(parsed as any).token) (parsed as any).token = headerToken
+        }
       }
     }
 
@@ -343,7 +453,9 @@ async function requestViaIpc(method: string, url: string, params?: any, data?: a
     if (method === 'GET') cacheSet('GET', fullUrl, normalized)
     return normalized
   } catch (err: any) {
-    if (method === 'GET') {
+    const msg = String(err?.message || '')
+    const isAuthError = msg.includes('未授权') || msg.includes('登录') || msg.includes('token')
+    if (method === 'GET' && !isAuthError) {
       const cached = cacheGet('GET', fullUrl)
       if (cached !== null) {
         console.warn('离线/网络异常，已返回缓存数据:', fullUrl)
@@ -370,9 +482,12 @@ service.interceptors.request.use(
     // 从本地存储中获取 token
     const token = localStorage.getItem('token')
     // 如果有 token，添加到请求头
-    if (token) {
-      ;(config.headers as any).Authorization = `Bearer ${token}`
-    }
+    applyAuthHeaders(config.headers as any, token)
+
+    // IPC cookie is only meaningful for the Electron net.request path; harmless for same-origin,
+    // but browsers will typically ignore/override Cookie anyway.
+    const storedCookie = getStoredIpcCookie()
+    if (storedCookie) (config.headers as any).Cookie = storedCookie
     return config
   },
   (error) => {
@@ -384,6 +499,26 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   (response: AxiosResponse) => {
+    // Many backends do not include token in response body; they send it in headers/cookies.
+    try {
+      const url = String(response.config?.url || '')
+      if (url.includes('/user/login')) {
+        const headerToken = extractTokenFromHeaders(response.headers)
+        if (headerToken) {
+          try { localStorage.setItem('token', headerToken) } catch {}
+          if (response.data && typeof response.data === 'object') {
+            if ((response.data as any).data && typeof (response.data as any).data === 'object' && !(response.data as any).data.token) {
+              ;(response.data as any).data.token = headerToken
+            } else if (!(response.data as any).token) {
+              ;(response.data as any).token = headerToken
+            }
+          }
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     const normalized = normalizeResponseData(response.data)
     const method = String(response.config?.method || 'GET').toUpperCase()
     if (method === 'GET') {

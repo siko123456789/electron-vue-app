@@ -127,13 +127,17 @@ const rules = {
 	      code: form.code
 	    })
     console.log(res,12345)
-	    if (res.code === 0) {
-	      const token = res?.data?.token || 'login-success-' + Date.now()
-	      authStore.setAuth({ token, userInfo: res.data })
-	      ElMessage.success("登录成功")
-      router.push("/workbench")
+		    if (res.code === 0) {
+		      const token =
+		        (typeof res?.data?.token === "string" && res.data.token.trim()) ? res.data.token.trim()
+		        : ((localStorage.getItem("token") || "").trim())
 
-    } else {
+		      // Token is preferred; if backend uses cookie/session and doesn't expose token, allow entry with userInfo.
+		      authStore.setAuth({ token: token || null, userInfo: res.data })
+		      ElMessage.success("登录成功")
+	      router.push("/workbench")
+
+	    } else {
       ElMessage.error(res.msg || "登录失败")
 
     }

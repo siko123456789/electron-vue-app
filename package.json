@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "axios": "^1.13.6",
+    "electron-window-state": "^5.0.3",
     "element-plus": "^2.13.5",
     "pinia": "^3.0.4",
     "vue": "^3.4.21",
@@ -32,13 +33,15 @@
     "vue-tsc": "^2.0.26"
   },
   "build": {
-    "appId": "com.risk.app",
+    "appId": "risk-app",
     "productName": "风险治理",
     "asar": true,
     "compression": "maximum",
     "publish": [
       {
-        "provider": "github"
+        "provider": "github",
+        "owner": "siko123456789",
+        "repo": "electron-vue-app"
       }
     ],
     "npmRebuild": false,

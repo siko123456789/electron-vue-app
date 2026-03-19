@@ -50,13 +50,17 @@ export const useAuthStore = defineStore('auth', {
     userInfo: safeParseJson(localStorage.getItem(STORAGE_KEYS.userInfo)) as UserInfo | null,
   }),
   getters: {
-    isLoggedIn: (state) => Boolean(state.token),
+    // Some backends use cookie/session login and don't return token in body.
+    // Treat having userInfo as logged in as well (router guard will allow entry).
+    isLoggedIn: (state) => Boolean(state.token) || Boolean(state.userInfo),
   },
   actions: {
-    setAuth(payload: { token: string; userInfo?: UserInfo }) {
-      this.token = payload.token
+    setAuth(payload: { token?: string | null; userInfo?: UserInfo }) {
+      const nextToken = (payload.token ?? '').toString().trim()
+      this.token = nextToken ? nextToken : null
       this.userInfo = payload.userInfo ?? null
-      localStorage.setItem(STORAGE_KEYS.token, payload.token)
+      if (this.token) localStorage.setItem(STORAGE_KEYS.token, this.token)
+      else localStorage.removeItem(STORAGE_KEYS.token)
       localStorage.setItem(STORAGE_KEYS.userInfo, JSON.stringify(this.userInfo))
     },
     clearAuth() {

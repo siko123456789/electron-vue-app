@@ -26,7 +26,7 @@
           >
             <el-menu-item index="/workbench">
               <el-icon>
-                <HomeFilled />
+                <House />
               </el-icon>
               <span>工作台</span>
             </el-menu-item>
@@ -44,7 +44,7 @@
             </el-menu-item>-->
             <el-menu-item index="/events">
               <el-icon>
-                <Bell />
+                <Memo />
               </el-icon>
               <span>事件响应</span>
             </el-menu-item>

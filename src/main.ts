@@ -44,7 +44,26 @@ app.mount('#app').$nextTick(() => {
       })
     }
 
+    const onNavigateFromMain = async (_event: any, payload: any) => {
+      const path = typeof payload?.path === 'string' && payload.path ? payload.path : '/events'
+      const alertId = payload?.alertId ? String(payload.alertId) : ''
+      try {
+        await router.push(path)
+      } catch {
+        // ignore duplicated navigation
+      }
+      if (alertId) {
+        alerts.markRead(alertId)
+      }
+    }
+
+    const onMarkAllReadFromMain = () => {
+      alerts.markAllRead()
+    }
+
     window.ipcRenderer.on('app/alert', onAlertFromMain)
+    window.ipcRenderer.on('app/navigate', onNavigateFromMain)
+    window.ipcRenderer.on('app/alerts/mark-all-read', onMarkAllReadFromMain)
 
     const syncUnreadCount = (count: number) => {
       const ipc = (window as any)?.ipcRenderer

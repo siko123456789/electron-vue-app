@@ -16,6 +16,10 @@
     "noEmit": true,
     "jsx": "preserve",
 
+    /* 允许默认导入 */
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

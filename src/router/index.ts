@@ -85,9 +85,8 @@ router.beforeEach((to, _from, next) => {
   // 检查是否需要认证
   if (to.meta.requiresAuth !== false) {
     const authStore = useAuthStore(pinia)
-    const token = authStore.token
-    // 如果没有 token，跳转到登录页面
-    if (!token) {
+    // 如果没有登录态，跳转到登录页面
+    if (!authStore.isLoggedIn) {
       next('/login')
     } else {
       next()
