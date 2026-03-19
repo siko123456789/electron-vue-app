@@ -1,6 +1,7 @@
 import type { BrowserWindow } from 'electron'
-import { screen } from 'electron'
+import { screen,nativeImage } from 'electron'
 import * as path from 'node:path'
+import { getAppIconPathForWindow } from '../main'
 
 export type WindowManagerDeps = {
   startedFromAutoStart: boolean
@@ -104,7 +105,8 @@ export function createWindowManager(deps: WindowManagerDeps) {
       resizable: true,
       autoHideMenuBar: true,
       show: !deps.startedFromAutoStart,
-      icon: path.join(deps.appRoot, 'public', 'lanhu_logo.png'),
+      // Use the same icon resolution logic as tray/icon (works for both dev and packaged builds).
+      icon: nativeImage.createFromPath(getAppIconPathForWindow()),
       webPreferences: {
         preload: path.join(deps.MAIN_DIST, 'preload.mjs'),
       }
