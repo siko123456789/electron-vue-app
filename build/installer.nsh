@@ -34,7 +34,6 @@ Function AutoStartPageLeave
 FunctionEnd
 
 !macro customWelcomePage
-  !insertmacro skipPageIfUpdated
   Page custom AutoStartPageCreate AutoStartPageLeave
 !macroend
 
