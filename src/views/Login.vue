@@ -91,7 +91,7 @@ const captchaCanvas = ref()
 const loading = ref(false)
 
 	// Use BASE_URL so it works for both dev server and file:// production build.
-	const logoSrc = `${import.meta.env.BASE_URL}lanhu_logo.png`
+	const logoSrc = `${import.meta.env.BASE_URL}lanhu_logo.ico`
 	const title = ref("风险治理系统")
 
 const captcha = ref(false)

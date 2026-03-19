@@ -182,7 +182,7 @@ function getCandidateAssetPaths(filename: string) {
  */
 export function getAppIconPathForWindow(): string {
   const isWin = process.platform === 'win32'
-  const primary = isWin ? 'icon.ico' : 'lanhu_logo.png'  // 首选图标
+  const primary = isWin ? 'icon.ico' : 'lanhu_logo.ico'  // 首选图标
   const fallback = 'icon.ico'                      // 备选图标
 
   // 依次尝试查找主图标和备选图标
