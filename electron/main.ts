@@ -6,7 +6,7 @@
  * - 系统托盘（右键菜单、悬浮预览、未读数显示）
  * - 通知管理（右上角弹窗、声音提示、托盘气泡）
  * - IPC 通信（渲染进程与主进程之间的消息传递）
- * - 配置管理（通知开关等用户设置）
+ * - 配置管理（通知开关等用户设置）1
  */
 
 import { app, BrowserWindow, ipcMain, nativeImage, session, shell } from 'electron'
