@@ -281,6 +281,14 @@ let trayManager = createTrayManager({
   toggleMainWindow,                                  // 点击托盘图标时切换窗口状态
   showMainWindow,                                    // 点击"显示主界面"菜单项时调用
   hideMainWindow,                                    // 点击"隐藏主界面"菜单项时调用
+  onLockRequest: () => {
+    showMainWindow()
+    try {
+      windowManager.getWin()?.webContents.send('app/lock-request')
+    } catch {
+      // ignore
+    }
+  },
   onAlertClick: (alert) => openEventsPageFromNotification(alert),  // 点击通知时的回调（跳转到事件页）
   onQuitRequest: () => {                             // 用户点击"退出"时的处理
     windowManager.setQuitting(true)                  // 告诉窗口管理器：这次是真的要退出（不是隐藏）

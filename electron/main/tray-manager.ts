@@ -16,6 +16,7 @@ export type TrayManagerDeps = {
   toggleMainWindow: () => void
   showMainWindow: () => void
   hideMainWindow: () => void
+  onLockRequest: () => void
   onQuitRequest: () => void
   onTestAlertsEnabled: (enabled: boolean) => void
   onAlertClick?: (alert?: AlertRecord) => void
@@ -517,6 +518,7 @@ export function createTrayManager(deps: TrayManagerDeps) {
       const isHidden = !win || !win.isVisible() || win.isMinimized()
       const contextMenu = Menu.buildFromTemplate([
         { label: isHidden ? '显示主界面' : '隐藏主界面', click: () => (isHidden ? deps.showMainWindow() : deps.hideMainWindow()) },
+        { label: '锁定应用', click: () => deps.onLockRequest() },
         { label: '忽略全部未读', enabled: lastUnreadCount > 0, click: () => {
           try { win?.webContents?.send?.('app/alerts/mark-all-read') } catch {}
         } },

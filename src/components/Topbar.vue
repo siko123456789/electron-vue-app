@@ -109,6 +109,11 @@
                     <Setting />
                   </el-icon>设置
                 </el-dropdown-item>
+                <el-dropdown-item command="lock" :disabled="!settingsStore.hasLockPassword">
+                  <el-icon style="margin-right: 6px">
+                    <Lock />
+                  </el-icon>锁定应用
+                </el-dropdown-item>
                 <el-dropdown-item command="logout">
                   <el-icon style="margin-right: 6px">
                     <SwitchButton />
@@ -157,6 +162,7 @@
 	import { computed, ref } from "vue";
 	import { useAlertsStore } from "@/stores/alerts";
 	import { useAuthStore } from "@/stores/auth";
+	import { useSettingsStore } from "@/stores/settings";
 	import type { UserInfo } from "@/stores/auth";
 	import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter, useRoute } from "vue-router";
@@ -165,6 +171,7 @@ import { logout } from "@/api/login";
 const alerts = useAlertsStore();
 const drawerOpen = ref(false);
 const authStore = useAuthStore();
+const settingsStore = useSettingsStore();
 const router = useRouter();
 const route = useRoute();
 
@@ -252,6 +259,14 @@ function stopAutoTest() {
 const handleUserCommand = async (command: string) => {
   if (command === "settings") {
     router.push("/settings");
+  } else if (command === "lock") {
+    if (!settingsStore.hasLockPassword) {
+      ElMessage.warning("请先在设置中启用应用锁");
+      return;
+    }
+    drawerOpen.value = false;
+    settingsStore.lockApp();
+    ElMessage.success("应用已锁定");
   } else if (command === "logout") {
     try {
       // 显示确认对话框

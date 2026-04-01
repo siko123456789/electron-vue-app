@@ -7,6 +7,7 @@
         <router-view />
       </main>
     </div>
+    <AppLockOverlay />
   </div>
 </template>
 
@@ -14,6 +15,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import Topbar from './components/Topbar.vue'
+import AppLockOverlay from './components/AppLockOverlay.vue'
 
 const route = useRoute()
 // Hide the global Topbar on public pages (e.g. login) where user isn't authenticated yet.

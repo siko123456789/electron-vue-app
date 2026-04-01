@@ -5,6 +5,7 @@ import { pinia } from './stores'
 import { useSettingsStore } from './stores/settings'
 import { useAlertsStore } from './stores/alerts'
 import { watch } from 'vue'
+import { ElMessage } from 'element-plus'
 
 // 样式引入顺序很重要
 import 'element-plus/dist/index.css'
@@ -32,6 +33,7 @@ app.mount('#app').$nextTick(() => {
   // 来自主进程的应用警报(即使顶部栏未挂载，仍保持运行)
   try {
     const alerts = useAlertsStore()
+    const settings = useSettingsStore()
 
     const onAlertFromMain = (_event: any, payload: any) => {
       if (!payload || typeof payload !== 'object') return
@@ -61,9 +63,25 @@ app.mount('#app').$nextTick(() => {
       alerts.markAllRead()
     }
 
+    const onLockRequest = async () => {
+      if (settings.hasLockPassword) {
+        settings.lockApp()
+        ElMessage.success('应用已锁定')
+        return
+      }
+
+      try {
+        await router.push('/settings')
+      } catch {
+        // ignore duplicated navigation
+      }
+      ElMessage.warning('请先在设置中添加锁屏密码')
+    }
+
     window.ipcRenderer.on('app/alert', onAlertFromMain)
     window.ipcRenderer.on('app/navigate', onNavigateFromMain)
     window.ipcRenderer.on('app/alerts/mark-all-read', onMarkAllReadFromMain)
+    window.ipcRenderer.on('app/lock-request', onLockRequest)
 
     const syncUnreadCount = (count: number) => {
       const ipc = (window as any)?.ipcRenderer
