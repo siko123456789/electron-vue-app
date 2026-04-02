@@ -5,7 +5,7 @@
     title="发送通知"
     width="640px"
     top="8vh"
-    custom-class="dispose-email-notify-dialog dispose-workbench-shell"
+    class="dispose-email-notify-dialog dispose-workbench-shell"
     append-to-body
     @close="handleClose"
   >
@@ -15,16 +15,17 @@
       :embedded="false"
       @sent="handlePanelSent"
     />
+
     <template #footer>
       <span class="dialog-footer">
-      <el-button @click="dialogVisible = false">关 闭</el-button>
+        <el-button @click="dialogVisible = false">关 闭</el-button>
       </span>
     </template>
   </el-dialog>
 </template>
 
-<script lang="ts">
-// @ts-nocheck
+<script>
+import { computed } from 'vue'
 import DisposeEmailNotifyPanel from './DisposeEmailNotifyPanel.vue'
 
 /**
@@ -32,7 +33,9 @@ import DisposeEmailNotifyPanel from './DisposeEmailNotifyPanel.vue'
  */
 export default {
   name: 'DisposeEmailNotifyDialog',
-  components: { DisposeEmailNotifyPanel },
+  components: {
+    DisposeEmailNotifyPanel
+  },
   props: {
     visible: {
       type: Boolean,
@@ -43,25 +46,32 @@ export default {
       default: null
     }
   },
-  computed: {
-    dialogVisible: {
-      get () {
-        return this.visible
+  emits: ['update:visible', 'close', 'sent'],
+  setup(props, { emit }) {
+    const dialogVisible = computed({
+      get() {
+        return props.visible
       },
-      set (value) {
-        this.$emit('update:visible', value)
+      set(value) {
+        emit('update:visible', value)
       }
-    }
-  },
-  methods: {
+    })
+
     /** 关闭时同步父级 */
-    handleClose () {
-      this.$emit('close')
-    },
+    const handleClose = () => {
+      emit('close')
+    }
+
     /** 面板发送成功：关闭弹框并上抛事件 */
-    handlePanelSent (payload) {
-      this.$emit('sent', payload)
-      this.dialogVisible = false
+    const handlePanelSent = (payload) => {
+      emit('sent', payload)
+      dialogVisible.value = false
+    }
+
+    return {
+      dialogVisible,
+      handleClose,
+      handlePanelSent
     }
   }
 }

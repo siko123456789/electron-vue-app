@@ -1478,7 +1478,7 @@ $white80: rgba(255, 255, 255, 0.8);
   color: rgba(255, 255, 255, 0.88);
   word-break: break-word;
 
-  ::v-deep .ai-qa-plain-body {
+  :deep(.ai-qa-plain-body) {
     margin: 0;
     padding: 0;
     color: rgba(255, 255, 255, 0.92);
@@ -1486,35 +1486,35 @@ $white80: rgba(255, 255, 255, 0.8);
     line-height: 1.65;
     white-space: normal;
   }
-  ::v-deep .ai-qa-plain-stream {
+  :deep(.ai-qa-plain-stream) {
     color: rgba(255, 255, 255, 0.92);
     font-size: 13px;
     line-height: 1.65;
     white-space: normal;
     word-break: break-word;
   }
-  ::v-deep .ai-qa-plain-stream--placeholder {
+  :deep(.ai-qa-plain-stream--placeholder) {
     display: inline-block;
     min-width: 4px;
     min-height: 1.1em;
     vertical-align: bottom;
   }
-  ::v-deep .ai-qa-md-empty {
+  :deep(.ai-qa-md-empty) {
     margin: 0;
     color: $white50;
     font-size: 12px;
   }
 
-  ::v-deep p {
+  :deep(p) {
     margin: 0 0 8px;
     &:last-child {
       margin-bottom: 0;
     }
   }
-  ::v-deep h1,
-  ::v-deep h2,
-  ::v-deep h3,
-  ::v-deep h4 {
+  :deep(h1),
+  :deep(h2),
+  :deep(h3),
+  :deep(h4) {
     margin: 10px 0 6px;
     font-size: 13px;
     font-weight: 800;
@@ -1524,14 +1524,14 @@ $white80: rgba(255, 255, 255, 0.8);
       margin-top: 0;
     }
   }
-  ::v-deep strong {
+  :deep(strong) {
     color: #f5f3ff;
     font-weight: 700;
   }
-  ::v-deep em {
+  :deep(em) {
     color: rgba(255, 255, 255, 0.78);
   }
-  ::v-deep a {
+  :deep(a) {
     color: #c4b5fd;
     text-decoration: underline;
     text-underline-offset: 2px;
@@ -1539,16 +1539,16 @@ $white80: rgba(255, 255, 255, 0.8);
       color: #ddd6fe;
     }
   }
-  ::v-deep ul,
-  ::v-deep ol {
+  :deep(ul),
+  :deep(ol) {
     margin: 6px 0;
     padding-left: 1.25em;
     color: rgba(255, 255, 255, 0.82);
   }
-  ::v-deep li {
+  :deep(li) {
     margin: 2px 0;
   }
-  ::v-deep blockquote {
+  :deep(blockquote) {
     margin: 8px 0;
     padding: 6px 0 6px 12px;
     border-left: 3px solid #a78bfa;
@@ -1556,7 +1556,7 @@ $white80: rgba(255, 255, 255, 0.8);
     background: rgba(147, 51, 234, 0.08);
     border-radius: 0 8px 8px 0;
   }
-  ::v-deep code {
+  :deep(code) {
     font-size: 11px;
     padding: 2px 6px;
     border-radius: 6px;
@@ -1565,7 +1565,7 @@ $white80: rgba(255, 255, 255, 0.8);
     color: #e9d5fd;
     font-family: 'SF Mono', 'Menlo', monospace;
   }
-  ::v-deep pre {
+  :deep(pre) {
     margin: 8px 0;
     padding: 10px 12px;
     border-radius: 10px;
@@ -1581,24 +1581,24 @@ $white80: rgba(255, 255, 255, 0.8);
       line-height: 1.45;
     }
   }
-  ::v-deep hr {
+  :deep(hr) {
     border: none;
     border-top: 1px solid $white20;
     margin: 12px 0;
   }
-  ::v-deep table {
+  :deep(table) {
     width: 100%;
     border-collapse: collapse;
     font-size: 11px;
     margin: 8px 0;
   }
-  ::v-deep th,
-  ::v-deep td {
+  :deep(th),
+  :deep(td) {
     border: 1px solid $white20;
     padding: 6px 8px;
     text-align: left;
   }
-  ::v-deep th {
+  :deep(th) {
     background: rgba(147, 51, 234, 0.15);
     color: #e9d5fd;
     font-weight: 700;
@@ -1682,7 +1682,7 @@ $white80: rgba(255, 255, 255, 0.8);
   flex: 1;
 }
 
-.chat-el-input ::v-deep .el-input__inner {
+.chat-el-input :deep(.el-input__inner) {
   border: none;
   background: transparent;
   padding-left: 44px;
@@ -1726,7 +1726,7 @@ $white80: rgba(255, 255, 255, 0.8);
 .ai-qa-md,
 .ai-qa-toolcall-title,
 .ai-qa-tool-output-title,
-.chat-el-input ::v-deep .el-input__inner {
+.chat-el-input :deep(.el-input__inner) {
   font-size: 12px;
 }
 </style>
@@ -1796,7 +1796,7 @@ $white80: rgba(255, 255, 255, 0.8);
   border-radius: 14px;
 }
 
-.chat-el-input ::v-deep .el-input__inner {
+.chat-el-input :deep(.el-input__inner) {
   height: 36px;
   line-height: 36px;
   padding-left: 32px;
@@ -1892,7 +1892,7 @@ $white80: rgba(255, 255, 255, 0.8);
   border-radius: 18px;
 }
 
-.chat-el-input ::v-deep .el-input__inner {
+.chat-el-input :deep(.el-input__inner) {
   height: 44px;
   line-height: 44px;
   padding-left: 38px;
@@ -2046,26 +2046,26 @@ $white80: rgba(255, 255, 255, 0.8);
 .ai-qa-md {
   color: #434a5c;
 
-  ::v-deep .ai-qa-plain-body,
-  ::v-deep .ai-qa-plain-stream,
-  ::v-deep strong,
-  ::v-deep code,
-  ::v-deep th {
+  :deep(.ai-qa-plain-body),
+  :deep(.ai-qa-plain-stream),
+  :deep(strong),
+  :deep(code),
+  :deep(th) {
     color: #2f3545;
   }
 
-  ::v-deep blockquote {
+  :deep(blockquote) {
     background: #faf5ff;
     border-left-color: #b785ff;
     color: #6e7690;
   }
 
-  ::v-deep code {
+  :deep(code) {
     background: #f7f2ff;
     border-color: #eadcff;
   }
 
-  ::v-deep pre {
+  :deep(pre) {
     background: #fff;
     border-color: #efe7fb;
   }
@@ -2089,7 +2089,7 @@ $white80: rgba(255, 255, 255, 0.8);
   color: #b785ff;
 }
 
-.chat-el-input ::v-deep .el-input__inner {
+.chat-el-input :deep(.el-input__inner) {
   color: #2f3545;
   font-size: 15px;
 }

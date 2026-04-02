@@ -571,24 +571,24 @@ $amber: #f59e0b;
 }
 
 /* Element UI v-loading 默认浅色遮罩会在深色弹框内闪白，强制与弹框同系深色 + 轻微模糊 */
-.task-modal-body ::v-deep .el-loading-mask {
+.task-modal-body :deep(.el-loading-mask) {
   background-color: rgba(9, 9, 11, 0.78) !important;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
-.task-modal-body ::v-deep .el-loading-spinner .path {
+.task-modal-body :deep(.el-loading-spinner .path) {
   stroke: #c4b5fd;
 }
 
-.task-modal-body ::v-deep .el-loading-text {
+.task-modal-body :deep(.el-loading-text) {
   color: rgba(255, 255, 255, 0.82);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
-.task-modal-body ::v-deep .task-modal-loading.el-loading-mask {
+.task-modal-body :deep(.task-modal-loading.el-loading-mask) {
   background-color: rgba(9, 9, 11, 0.82) !important;
 }
 
@@ -815,7 +815,7 @@ $amber: #f59e0b;
   padding: 4px 0 0;
 }
 
-.task-modal-pagination-wrap ::v-deep .el-pagination {
+.task-modal-pagination-wrap :deep(.el-pagination) {
   .btn-prev,
   .btn-next,
   .el-pager li {

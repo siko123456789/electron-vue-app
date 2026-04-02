@@ -13,7 +13,7 @@
       <iframe
         ref="reportIframe"
         class="dispose-report-iframe"
-        :srcdoc="htmlContent"
+        :src="previewBlobUrl"
         frameborder="0"
         title="报告预览"
       ></iframe>
@@ -119,11 +119,11 @@
 
     <template #footer>
       <span class="dialog-footer">
-      <el-button type="primary" plain @click="handleDownloadHtml"
-        >下载 HTML</el-button
-      >
-      <el-button type="primary" @click="handlePrint">导出 PDF / 打印</el-button>
-      <el-button @click="dialogVisible = false">关 闭</el-button>
+        <el-button type="primary" plain @click="handleDownloadHtml">
+          下载 HTML
+        </el-button>
+        <el-button type="primary" @click="handlePrint">导出 PDF / 打印</el-button>
+        <el-button @click="dialogVisible = false">关 闭</el-button>
       </span>
     </template>
   </el-dialog>
@@ -154,29 +154,121 @@ export default {
       default: null
     }
   },
+  data() {
+    return {
+      previewBlobUrl: ''
+    }
+  },
   computed: {
     dialogVisible: {
-      get () {
+      get() {
         return this.visible
       },
-      set (value) {
+      set(value) {
         this.$emit('update:visible', value)
       }
     },
-    reportPayload () {
+    reportPayload() {
       return this.reportData
+    },
+    previewHtmlContent() {
+      return this.normalizeHtmlContent(this.htmlContent)
     }
   },
+  watch: {
+    previewHtmlContent: {
+      immediate: true,
+      handler(value) {
+        this.updatePreviewBlobUrl(value)
+      }
+    }
+  },
+  beforeUnmount() {
+    this.revokePreviewBlobUrl()
+  },
   methods: {
-    handleClose () {
+    handleClose() {
       this.$emit('close')
     },
+    getBuiltinReportStyle() {
+      return `
+        <style>
+          html, body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+          }
+
+          body {
+            word-break: break-word;
+          }
+
+          img {
+            max-width: 100%;
+          }
+
+          a {
+            word-break: break-all;
+          }
+
+          * {
+            font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif !important;
+          }
+        </style>
+      `
+    },
+    normalizeHtmlContent(rawHtml) {
+      if (!rawHtml) return ''
+
+      let html = String(rawHtml)
+      const builtinStyle = this.getBuiltinReportStyle()
+
+      if (/<head[^>]*>/i.test(html)) {
+        html = html.replace(
+          /<head([^>]*)>/i,
+          `<head$1><meta charset="utf-8" />${builtinStyle}`
+        )
+      } else if (/<html[^>]*>/i.test(html)) {
+        html = html.replace(
+          /<html([^>]*)>/i,
+          `<html$1><head><meta charset="utf-8" />${builtinStyle}</head>`
+        )
+      } else {
+        html = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    ${builtinStyle}
+  </head>
+  <body>${html}</body>
+</html>`
+      }
+
+      return html
+    },
+    revokePreviewBlobUrl() {
+      if (this.previewBlobUrl) {
+        URL.revokeObjectURL(this.previewBlobUrl)
+        this.previewBlobUrl = ''
+      }
+    },
+    updatePreviewBlobUrl(html) {
+      this.revokePreviewBlobUrl()
+      if (!html) return
+
+      const blob = new Blob([html], {
+        type: 'text/html;charset=utf-8'
+      })
+      this.previewBlobUrl = URL.createObjectURL(blob)
+    },
     /** 触发下载 HTML（由父组件生成 Blob 或仅透传） */
-    handleDownloadHtml () {
-      this.$emit('download-html')
+    handleDownloadHtml() {
+      this.$emit('download-html', this.previewHtmlContent)
     },
     /** 打印当前预览区域 */
-    handlePrint () {
+    handlePrint() {
       this.$nextTick(() => {
         const printWindow = window.open('', '_blank')
         if (!printWindow) {
@@ -186,8 +278,8 @@ export default {
           return
         }
         const html = this.htmlContent
-          ? String(this.htmlContent)
-          : `<!DOCTYPE html><html><head><meta charset="utf-8"><title>报告</title></head><body>${
+          ? this.previewHtmlContent
+          : `<!DOCTYPE html><html><head><meta charset="utf-8">${this.getBuiltinReportStyle()}<title>报告</title></head><body>${
               (this.$refs.reportPrintArea && this.$refs.reportPrintArea.innerHTML) ||
               ''
             }</body></html>`
@@ -222,9 +314,11 @@ export default {
   padding-right: 6px;
   scrollbar-width: thin;
   scrollbar-color: rgba(124, 58, 237, 0.35) #f3f4f6;
+
   &::-webkit-scrollbar {
     width: 6px;
   }
+
   &::-webkit-scrollbar-thumb {
     background: rgba(124, 58, 237, 0.35);
     border-radius: 8px;
@@ -319,6 +413,7 @@ export default {
   margin: 0 0 14px;
   padding-bottom: 10px;
   border-bottom: 1px solid #ede9fe;
+
   i {
     color: #7c3aed;
   }
@@ -330,6 +425,7 @@ export default {
   border: 1px solid #ede9fe !important;
   background: #fff !important;
   transition: box-shadow 0.2s ease;
+
   &:hover {
     box-shadow: 0 8px 24px rgba(124, 58, 237, 0.08);
   }
@@ -401,6 +497,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
+
   i {
     font-size: 13px;
   }
@@ -437,6 +534,7 @@ export default {
   padding: 24px 0 8px;
   font-size: 11px;
   color: #a78bfa;
+
   p {
     margin: 4px 0 0;
   }

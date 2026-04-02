@@ -8,7 +8,7 @@
     <el-card shadow="never" class="dispose-email-context-card">
       <div class="dispose-email-context-head">
         <div class="dispose-email-context-icon-wrap">
-          <i class="el-icon-message"></i>
+          <el-icon><Message /></el-icon>
         </div>
         <div class="dispose-email-context-head-text">
           <div class="dispose-email-context-label">通知关联</div>
@@ -28,12 +28,13 @@
     >
       <template #header>
         <div class="dispose-email-card-header">
-        <span class="dispose-email-card-header-title">
-          <i class="el-icon-setting"></i>
-          发件邮箱配置
-        </span>
+          <span class="dispose-email-card-header-title">
+            <el-icon><Setting /></el-icon>
+            发件邮箱配置
+          </span>
         </div>
       </template>
+
       <el-alert
         class="dispose-email-alert"
         title="系统尚未配置发件邮箱，请先填写下方信息保存，或选择使用系统默认邮箱。"
@@ -41,6 +42,7 @@
         :closable="false"
         show-icon
       />
+
       <el-form
         class="dispose-email-form"
         label-position="top"
@@ -53,6 +55,7 @@
             <el-radio value="smtps">SMTPS</el-radio>
           </el-radio-group>
         </el-form-item>
+
         <el-form-item label="邮件服务器地址">
           <el-input
             v-model="emailConfig.smtpserver"
@@ -60,6 +63,7 @@
             clearable
           />
         </el-form-item>
+
         <el-form-item label="服务器端口号">
           <el-input
             v-model="emailConfig.smtpport"
@@ -67,6 +71,7 @@
             clearable
           />
         </el-form-item>
+
         <el-form-item label="发件地址">
           <el-input
             v-model="emailConfig.from"
@@ -75,6 +80,7 @@
             clearable
           />
         </el-form-item>
+
         <el-form-item label="密码/授权码">
           <el-input
             v-model="emailConfig.password"
@@ -85,6 +91,7 @@
           />
         </el-form-item>
       </el-form>
+
       <div class="dispose-email-form-actions">
         <el-button
           type="primary"
@@ -107,12 +114,13 @@
     >
       <template #header>
         <div class="dispose-email-card-header">
-        <span class="dispose-email-card-header-title">
-          <i class="el-icon-s-promotion"></i>
-          发送邮件
-        </span>
+          <span class="dispose-email-card-header-title">
+            <el-icon><Promotion /></el-icon>
+            发送邮件
+          </span>
         </div>
       </template>
+
       <div class="dispose-email-sender-line">
         <span class="dispose-email-sender-label">当前发件人</span>
         <el-tag
@@ -127,6 +135,7 @@
           重新配置
         </el-button>
       </div>
+
       <el-form
         class="dispose-email-form"
         label-position="top"
@@ -139,17 +148,20 @@
             filterable
             allow-create
             default-first-option
-            placeholder="name@company.com">
+            placeholder="name@company.com"
+          >
             <el-option
               v-for="item in personListPage"
               :key="item.id"
               :label="item.email_address"
-              :value="item.email_address">
+              :value="item.email_address"
+            >
               <span>{{ item.email_address }} -- {{ item.name }}</span>
             </el-option>
           </el-select>
         </el-form-item>
       </el-form>
+
       <el-tooltip
         :disabled="canSendEmail"
         :content="sendDisabledReason"
@@ -163,7 +175,7 @@
             :disabled="!canSendEmail"
             @click="handleSendNotify"
           >
-            <i v-if="!sendingEmail" class="el-icon-position"></i>
+            <el-icon v-if="!sendingEmail"><Position /></el-icon>
             {{ sendingEmail ? '发送中...' : '发送通知' }}
           </el-button>
         </span>
@@ -172,18 +184,32 @@
   </div>
 </template>
 
-<script lang="ts">
-// @ts-nocheck
+<script>
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import {
+  Message,
+  Setting,
+  Promotion,
+  Position
+} from '@element-plus/icons-vue'
+
 import { getEmailInfoAPI } from '@/api/attackSurface'
 import { sendEmailAPI } from '@/api/aiGovernance'
 import { saveEmailInfo } from '@/api/setting'
-import { personList } from "@/api/object";
+import { personList } from '@/api/object'
 
 /**
  * 邮件通知表单区（可嵌入风险详情弹框，也可被 DisposeEmailNotifyDialog 包裹单独使用）
  */
 export default {
   name: 'DisposeEmailNotifyPanel',
+  components: {
+    Message,
+    Setting,
+    Promotion,
+    Position
+  },
   props: {
     /**
      * { category: 'vuln'|'weak'|'port'|'workorder'|'attack_surface', item: Object, assetIp: string,
@@ -199,87 +225,134 @@ export default {
       default: false
     }
   },
-  data () {
-    return {
-      isEmailConfigured: false,
-      useDefaultEmail: false,
-      emailConfigSaving: false,
-      sendingEmail: false,
-      receiverEmail: '',
-      emailConfig: {
-        protocol: 'smtp',
-        smtpserver: '',
-        smtpport: '',
-        from: '',
-        password: ''
-      },
-      personListPage: []
-    }
-  },
-  computed: {
-    contextTitleText () {
-      const context = this.notifyContext
+  emits: ['sent'],
+  setup(props, { emit }) {
+    const isEmailConfigured = ref(false)
+    const useDefaultEmail = ref(false)
+    const emailConfigSaving = ref(false)
+    const sendingEmail = ref(false)
+    const receiverEmail = ref('')
+    const personListPage = ref([])
+
+    const emailConfig = reactive({
+      protocol: 'smtp',
+      smtpserver: '',
+      smtpport: '',
+      from: '',
+      password: ''
+    })
+
+    const contextTitleText = computed(() => {
+      const context = props.notifyContext
       if (!context || !context.item) return '—'
+
       if (context.category === 'workorder') {
-        return (
-          context.item.title ||
-          `工单全部漏洞通知（${context.assetIp || '-'}）`
-        )
+        return context.item.title || `工单全部漏洞通知（${context.assetIp || '-'}）`
       }
+
       if (context.category === 'attack_surface') {
-        return (
-          context.item.title ||
-          `资产漏洞汇总通知（${context.assetIp || '-'}）`
-        )
+        return context.item.title || `资产漏洞汇总通知（${context.assetIp || '-'}）`
       }
+
       const row = context.item
+
       if (context.category === 'vuln') {
         return row.title || row.vuln_name || '漏洞风险'
       }
+
       if (context.category === 'weak') {
         return row.title || '弱口令风险'
       }
+
       if (context.category === 'port') {
         return `端口 ${row.port} (${row.service || '服务'})`
       }
+
       return '—'
-    },
-    contextHintText () {
-      const text = (this.buildSuggestionText() || '').trim()
+    })
+
+    const buildSuggestionText = () => {
+      const context = props.notifyContext
+      if (!context || !context.item) return ''
+
+      if (context.category === 'workorder') {
+        const count = resolvedVulnIdsForApi.value.length
+        return `将本工单下共 ${count} 条漏洞记录汇总发送至收件人邮箱。`
+      }
+
+      if (context.category === 'attack_surface') {
+        const count = resolvedVulnIdsForApi.value.length
+        return `将当前资产下共 ${count} 条漏洞记录汇总发送至收件人邮箱。`
+      }
+
+      const row = context.item
+
+      if (context.category === 'vuln') {
+        return (row.description || row.desc || '').trim()
+      }
+
+      if (context.category === 'weak') {
+        return (row.description || '').trim()
+      }
+
+      if (context.category === 'port') {
+        const vulnLines = (row.vulns || [])
+          .map(v => v.title || '')
+          .filter(Boolean)
+
+        const vulnPart =
+          vulnLines.length > 0
+            ? `关联漏洞：${vulnLines.join('；')}`
+            : '暂无关联漏洞条目'
+
+        return `端口 ${row.port}（${row.service || '服务'}）高危暴露治理提醒。\n${vulnPart}`
+      }
+
+      return ''
+    }
+
+    const contextHintText = computed(() => {
+      const text = (buildSuggestionText() || '').trim()
       if (!text) return ''
       const maxLen = 120
       return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text
-    },
-    backendDisabled () {
-      return !!(this.notifyContext && this.notifyContext.backendDisabled)
-    },
-    resolvedVulnIdsForApi () {
-      const context = this.notifyContext || {}
+    })
+
+    const backendDisabled = computed(() => {
+      return !!(props.notifyContext && props.notifyContext.backendDisabled)
+    })
+
+    const resolvedVulnIdsForApi = computed(() => {
+      const context = props.notifyContext || {}
       const ids = Array.isArray(context.vulnIds) ? context.vulnIds : []
       return ids
         .map(item => (item != null && item !== '' ? Number(item) : NaN))
         .filter(num => Number.isFinite(num) && num > 0)
-    },
-    canSendEmail () {
-      const receiver = (this.receiverEmail || '').trim()
+    })
+
+    const canSendEmail = computed(() => {
+      const receiver = (receiverEmail.value || '').trim()
       return (
-        !this.sendingEmail &&
+        !sendingEmail.value &&
         !!receiver &&
-        this.resolvedVulnIdsForApi.length > 0 &&
-        !this.backendDisabled
+        resolvedVulnIdsForApi.value.length > 0 &&
+        !backendDisabled.value
       )
-    },
-    sendDisabledReason () {
-      if (this.sendingEmail) return '邮件发送中，请稍后…'
-      if (this.backendDisabled) return '当前任务缺少漏洞ID，暂时无法进行通知操作'
-      if (this.resolvedVulnIdsForApi.length === 0) return '缺少漏洞ID，暂时无法发送通知'
-      const receiver = (this.receiverEmail || '').trim()
+    })
+
+    const sendDisabledReason = computed(() => {
+      if (sendingEmail.value) return '邮件发送中，请稍后…'
+      if (backendDisabled.value) return '当前任务缺少漏洞ID，暂时无法进行通知操作'
+      if (resolvedVulnIdsForApi.value.length === 0) return '缺少漏洞ID，暂时无法发送通知'
+      const receiver = (receiverEmail.value || '').trim()
       if (!receiver) return '请先填写收件人邮箱'
       return ''
-    },
-    resolvedVulnIdForApi () {
-      const context = this.notifyContext
+    })
+
+    const resolvedVulnIdForApi = computed(() => {
+      const context = props.notifyContext
       if (!context || context.category !== 'vuln' || !context.item) return null
+
       const row = context.item
       const raw =
         row.vuln_id != null
@@ -287,193 +360,200 @@ export default {
           : row.vulnId != null
           ? row.vulnId
           : row.id
+
       if (raw == null) return null
       const num = Number(raw)
       return Number.isFinite(num) ? num : null
+    })
+
+    const resetEmailSenderChoice = () => {
+      isEmailConfigured.value = false
+      useDefaultEmail.value = false
     }
-  },
-  watch: {
-    notifyContext: {
-      handler (value) {
-        if (value && value.item) {
-          this.onContextActive()
-        } else {
-          this.resetLocalState()
+
+    const resetLocalState = () => {
+      receiverEmail.value = ''
+      resetEmailSenderChoice()
+      emailConfig.protocol = 'smtp'
+      emailConfig.smtpserver = ''
+      emailConfig.smtpport = ''
+      emailConfig.from = ''
+      emailConfig.password = ''
+    }
+
+    const loadEmailConfig = async () => {
+      try {
+        const response = await getEmailInfoAPI()
+        if (!response || response.code !== 0) {
+          ElMessage.warning((response && response.msg) || '获取邮件配置失败')
+          return
         }
-      },
-      immediate: true,
-      deep: true
+
+        const emailConfigInfo = response.data || {}
+        emailConfig.protocol = String(emailConfigInfo.proto || 'SMTP').toLowerCase()
+        emailConfig.smtpserver = emailConfigInfo.smtpserver || ''
+        emailConfig.smtpport =
+          emailConfigInfo.smtpport != null ? String(emailConfigInfo.smtpport) : ''
+        emailConfig.from = emailConfigInfo.from || ''
+        emailConfig.password = emailConfigInfo.password || ''
+        isEmailConfigured.value = true
+      } catch (error) {
+        console.error(error)
+        ElMessage.error('获取邮件配置失败')
+      }
     }
-  },
-  mounted() {
-    this.getPersonList()
-  },
-  methods: {
-    /** 当前行进入通知视图时初始化 */
-    async onContextActive () {
-      this.receiverEmail = ''
-      await this.loadEmailConfig()
-    },
-    getPersonList() {
+
+    const validateEmailConfigForm = () => {
+      const smtpserver = (emailConfig.smtpserver || '').trim()
+      const smtpport = String(emailConfig.smtpport || '').trim()
+      const fromAddr = (emailConfig.from || '').trim()
+      const password = (emailConfig.password || '').trim()
+
+      if (!smtpserver || !smtpport || !fromAddr || !password) {
+        ElMessage.warning('请填写服务器地址、端口、发件地址和密码')
+        return false
+      }
+      return true
+    }
+
+    const handleSaveEmailConfig = async () => {
+      if (emailConfigSaving.value) return
+      if (!validateEmailConfigForm()) return
+
+      emailConfigSaving.value = true
+      const protoKey = String(emailConfig.protocol || 'smtp').toLowerCase()
+
+      const payload = {
+        proto: protoKey === 'smtps' ? 'SMTPS' : 'SMTP',
+        smtpserver: (emailConfig.smtpserver || '').trim(),
+        smtpport: Number(emailConfig.smtpport),
+        from: (emailConfig.from || '').trim(),
+        password: (emailConfig.password || '').trim()
+      }
+
+      try {
+        const response = await saveEmailInfo(payload)
+        if (response && response.code === 0) {
+          ElMessage.success((response && response.msg) || '保存成功')
+          isEmailConfigured.value = true
+          useDefaultEmail.value = false
+        } else {
+          ElMessage.error((response && response.msg) || '保存失败')
+        }
+      } catch (error) {
+        console.error(error)
+        ElMessage.error('保存失败')
+      } finally {
+        emailConfigSaving.value = false
+      }
+    }
+
+    const handleSendNotify = async () => {
+      if (sendingEmail.value) return
+
+      const receiver = (receiverEmail.value || '').trim()
+      const vulnIds = resolvedVulnIdsForApi.value
+
+      if (!receiver || vulnIds.length === 0) {
+        ElMessage.warning('请补全收件人邮箱与漏洞ID后再发送')
+        return
+      }
+
+      if (backendDisabled.value) {
+        ElMessage.warning('当前任务暂时无法进行通知操作')
+        return
+      }
+
+      if (!useDefaultEmail.value) {
+        if (!isEmailConfigured.value || !validateEmailConfigForm()) {
+          return
+        }
+      }
+
+      sendingEmail.value = true
+      try {
+        const response = await sendEmailAPI({
+          vuln_ids: vulnIds,
+          use_default: !!useDefaultEmail.value,
+          receiver_email: receiver
+        })
+
+        if (response && response.code === 0) {
+          ElMessage.success('邮件发送成功')
+          emit('sent', { demo: false })
+        } else {
+          ElMessage.error((response && response.msg) || '发送通知失败')
+        }
+      } catch (error) {
+        console.error(error)
+        ElMessage.error('发送通知失败')
+      } finally {
+        sendingEmail.value = false
+      }
+    }
+
+    const onContextActive = async () => {
+      receiverEmail.value = ''
+      await loadEmailConfig()
+    }
+
+    const getPersonList = async () => {
       const data = {
         condition: '',
         currentPage: 1,
         pageSize: 1000000
       }
-      personList(data).then(({data}) => {
-        this.personListPage = data.personList.filter((item) => item.email_address)
-      })
-    },
-    resetEmailSenderChoice () {
-      this.isEmailConfigured = false
-      this.useDefaultEmail = false
-    },
-    resetLocalState () {
-      this.receiverEmail = ''
-      this.resetEmailSenderChoice()
-      this.emailConfig = {
-        protocol: 'smtp',
-        smtpserver: '',
-        smtpport: '',
-        from: '',
-        password: ''
-      }
-    },
-    buildSuggestionText () {
-      const context = this.notifyContext
-      if (!context || !context.item) return ''
-      if (context.category === 'workorder') {
-        const count = this.resolvedVulnIdsForApi.length
-        return `将本工单下共 ${count} 条漏洞记录汇总发送至收件人邮箱。`
-      }
-      if (context.category === 'attack_surface') {
-        const count = this.resolvedVulnIdsForApi.length
-        return `将当前资产下共 ${count} 条漏洞记录汇总发送至收件人邮箱。`
-      }
-      const row = context.item
-      if (context.category === 'vuln') {
-        return (row.description || row.desc || '').trim()
-      }
-      if (context.category === 'weak') {
-        return (row.description || '').trim()
-      }
-      if (context.category === 'port') {
-        const vulnLines = (row.vulns || [])
-          .map(v => v.title || '')
-          .filter(Boolean)
-        const vulnPart =
-          vulnLines.length > 0
-            ? `关联漏洞：${vulnLines.join('；')}`
-            : '暂无关联漏洞条目'
-        return `端口 ${row.port}（${
-          row.service || '服务'
-        }）高危暴露治理提醒。\n${vulnPart}`
-      }
-      return ''
-    },
-    async loadEmailConfig () {
+
       try {
-        const response = await getEmailInfoAPI()
-        if (!response || response.code !== 0) {
-          this.$message.warning(
-            (response && response.msg) || '获取邮件配置失败'
-          )
-          return
-        }
-        const emailConfigInfo = response.data || {}
-        this.emailConfig.protocol = String(
-          emailConfigInfo.proto || 'SMTP'
-        ).toLowerCase()
-        this.emailConfig.smtpserver = emailConfigInfo.smtpserver || ''
-        this.emailConfig.smtpport =
-          emailConfigInfo.smtpport != null
-            ? String(emailConfigInfo.smtpport)
-            : ''
-        this.emailConfig.from = emailConfigInfo.from || ''
-        this.emailConfig.password = emailConfigInfo.password || ''
-        this.isEmailConfigured = true
+        const response = await personList(data)
+        const responseData = response?.data || {}
+        const list = Array.isArray(responseData.personList)
+          ? responseData.personList
+          : []
+
+        personListPage.value = list.filter(item => item.email_address)
       } catch (error) {
         console.error(error)
-        this.$message.error('获取邮件配置失败')
       }
-    },
-    /** 校验四个输入：服务器、端口、发件地址、授权码均必填 */
-    validateEmailConfigForm () {
-      const smtpserver = (this.emailConfig.smtpserver || '').trim()
-      const smtpport = String(this.emailConfig.smtpport || '').trim()
-      const fromAddr = (this.emailConfig.from || '').trim()
-      const password = (this.emailConfig.password || '').trim()
-      if (!smtpserver || !smtpport || !fromAddr || !password) {
-        this.$message.warning('请填写服务器地址、端口、发件地址和密码')
-        return false
-      }
-      return true
-    },
-    async handleSaveEmailConfig () {
-      // 说明：backendDisabled 仅用于「发送通知」是否走真实接口；保存邮件配置始终请求 saveEmailInfo
-      if (this.emailConfigSaving) return
-      if (!this.validateEmailConfigForm()) return
-      this.emailConfigSaving = true
-      const protoKey = String(this.emailConfig.protocol || 'smtp').toLowerCase()
-      const payload = {
-        proto: protoKey === 'smtps' ? 'SMTPS' : 'SMTP',
-        smtpserver: (this.emailConfig.smtpserver || '').trim(),
-        smtpport: Number(this.emailConfig.smtpport),
-        from: (this.emailConfig.from || '').trim(),
-        password: (this.emailConfig.password || '').trim()
-      }
-      try {
-        const response = await saveEmailInfo(payload)
-        if (response && response.code === 0) {
-          this.$message.success((response && response.msg) || '保存成功')
-          this.isEmailConfigured = true
-          this.useDefaultEmail = false
+    }
+
+    watch(
+      () => props.notifyContext,
+      async (value) => {
+        if (value && value.item) {
+          await onContextActive()
         } else {
-          this.$message.error((response && response.msg) || '保存失败')
+          resetLocalState()
         }
-      } catch (error) {
-        console.error(error)
-        this.$message.error('保存失败')
-      } finally {
-        this.emailConfigSaving = false
+      },
+      {
+        immediate: true,
+        deep: true
       }
-    },
-    async handleSendNotify () {
-      if (this.sendingEmail) return
-      const receiver = (this.receiverEmail || '').trim()
-      const vulnIds = this.resolvedVulnIdsForApi
-      if (!receiver || vulnIds.length === 0) {
-        this.$message.warning('请补全收件人邮箱与漏洞ID后再发送')
-        return
-      }
-      if (this.backendDisabled) {
-        this.$message.warning('当前任务暂时无法进行通知操作')
-        return
-      }
-      if (!this.useDefaultEmail) {
-        if (!this.isEmailConfigured || !this.validateEmailConfigForm()) {
-          return
-        }
-      }
-      this.sendingEmail = true
-      try {
-        const response = await sendEmailAPI({
-          vuln_ids: vulnIds,
-          use_default: !!this.useDefaultEmail,
-          receiver_email: receiver
-        })
-        if (response && response.code === 0) {
-          this.$message.success('邮件发送成功')
-          this.$emit('sent', { demo: false })
-        } else {
-          this.$message.error((response && response.msg) || '发送通知失败')
-        }
-      } catch (error) {
-        console.error(error)
-        this.$message.error('发送通知失败')
-      } finally {
-        this.sendingEmail = false
-      }
+    )
+
+    onMounted(() => {
+      getPersonList()
+    })
+
+    return {
+      isEmailConfigured,
+      useDefaultEmail,
+      emailConfigSaving,
+      sendingEmail,
+      receiverEmail,
+      emailConfig,
+      personListPage,
+      contextTitleText,
+      contextHintText,
+      backendDisabled,
+      resolvedVulnIdsForApi,
+      canSendEmail,
+      sendDisabledReason,
+      resolvedVulnIdForApi,
+      resetEmailSenderChoice,
+      handleSaveEmailConfig,
+      handleSendNotify
     }
   }
 }
@@ -606,18 +686,18 @@ export default {
 .dispose-email-form {
   margin-top: 4px;
 
-  ::v-deep .el-form-item__label {
+  :deep(.el-form-item__label){
     color: #4b5563;
     font-weight: 600;
     padding-bottom: 4px;
     line-height: 1.4;
   }
 
-  ::v-deep .el-input__inner {
+  :deep(.el-input__inner){
     border-radius: 8px;
   }
 
-  ::v-deep .el-input-group__prepend {
+  :deep(.el-input-group__prepend ){
     background: #f9fafb;
     color: #7c3aed;
     border-color: #e5e7eb;
@@ -631,7 +711,7 @@ export default {
   margin-top: 4px;
   padding-top: 4px;
 
-  ::v-deep .el-button--primary {
+   :deep(.el-button--primary ){
     background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
     border-color: #7c3aed;
     box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
@@ -642,7 +722,7 @@ export default {
     }
   }
 
-  ::v-deep .el-button--primary.is-plain {
+  :deep(.el-button--primary.is-plain){
     color: #5b21b6;
     border-color: #c4b5fd;
     background: #f5f3ff;
@@ -683,7 +763,7 @@ export default {
   letter-spacing: 0.02em;
   padding: 12px 20px;
 
-  ::v-deep i {
+  :deep(.el-icon){
     margin-right: 6px;
   }
 }

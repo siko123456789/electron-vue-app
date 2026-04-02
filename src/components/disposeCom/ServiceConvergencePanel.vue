@@ -1423,7 +1423,7 @@ export default {
     border-color: #d1d5db !important;
   }
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body){
     padding: 14px 16px;
   }
 }
@@ -1477,7 +1477,7 @@ export default {
   flex-shrink: 0;
   margin-top: 4px;
 
-  ::v-deep .el-radio__label {
+  :deep(.el-radio__label) {
     display: none;
   }
 }
@@ -1487,10 +1487,10 @@ export default {
   margin-right: 0 !important;
 
   @media (max-width: 992px) {
-    ::v-deep .el-col {
+    :deep(.el-col) {
       margin-bottom: 14px;
     }
-    ::v-deep .el-col:last-child {
+    :deep(.el-col:last-child) {
       margin-bottom: 0;
     }
   }
@@ -1505,14 +1505,14 @@ export default {
   background: #ffffff !important;
   height: 100%;
 
-  ::v-deep .el-card__header {
+  :deep(.el-card__header){
     padding: 10px 14px;
     flex-shrink: 0;
     border-bottom: 1px solid #f3f4f6;
     background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
   }
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body){
     padding: 0;
     flex: 1;
     min-height: 0;
@@ -1534,28 +1534,28 @@ export default {
 }
 
 .service-convergence-table {
-  ::v-deep .el-table__header th {
+  :deep(.el-table__header th)  {
     background: #f9fafb;
     color: #4b5563;
     font-weight: 700;
   }
 
   /* 固定列表头（如预览区源IP fixed=left） */
-  ::v-deep .el-table__fixed-header-wrapper .el-table__header th {
+  :deep(.el-table__fixed-header-wrapper .el-table__header th){
     background: #f9fafb;
     color: #4b5563;
     font-weight: 700;
   }
-  ::v-deep .el-table__fixed-header-wrapper .cell {
+  :deep(.el-table__fixed-header-wrapper .cell) {
     color: #4b5563;
     font-weight: 700;
   }
-  ::v-deep .el-table__fixed-header-wrapper {
+  :deep(.el-table__fixed-header-wrapper){
     z-index: 3;
   }
 
   /* 表格内滚动条更细，避免占用过多视觉宽度 */
-  ::v-deep .el-table__body-wrapper {
+  :deep(.el-table__body-wrapper){
     scrollbar-width: thin;
     scrollbar-color: rgba(124, 58, 237, 0.32) #f1f5f9;
 
@@ -1635,7 +1635,7 @@ export default {
   border: 1px solid #ede9fe !important;
   background: linear-gradient(180deg, #fafaff 0%, #ffffff 100%) !important;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body){
     padding: 14px 16px 16px;
   }
 }
@@ -1667,11 +1667,11 @@ export default {
 .service-convergence-source-form {
   max-width: 420px;
 
-  ::v-deep .el-form-item {
+  :deep(.el-form-item){
     margin-bottom: 0;
   }
 
-  ::v-deep .el-form-item__label {
+  :deep(.el-form-item__label){
     color: #4b5563;
     font-weight: 700;
     padding-bottom: 4px;
@@ -1687,11 +1687,11 @@ export default {
   border: 1px solid #e5e7eb !important;
   min-height: 200px;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body)  {
     padding: 0;
   }
 
-  ::v-deep .el-loading-mask {
+  :deep(.el-loading-mask){
     border-radius: 12px;
   }
 }
@@ -1709,7 +1709,7 @@ export default {
   border: 1px solid #fcd34d !important;
   background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%) !important;
 
-  ::v-deep .el-card__body {
+  :deep(.el-card__body){
     padding: 18px 18px 16px;
   }
 }
@@ -1739,11 +1739,11 @@ export default {
 .service-convergence-agent-form {
   margin-top: 6px;
 
-  ::v-deep .el-form-item {
+  :deep(.el-form-item)  {
     margin-bottom: 12px;
   }
 
-  ::v-deep .el-form-item__label {
+  :deep(.el-form-item__label) {
     font-size: 12px;
     color: #4b5563;
     font-weight: 700;
@@ -1811,12 +1811,12 @@ export default {
   align-items: center;
   margin: 6px 0;
   justify-content: center;
-  ::v-deep .el-input__inner {
+  :deep(.el-input__inner)  {
     height: 30px;
     line-height: 30px;
     font-size: 12px;
   }
-  ::v-deep .el-input__icon {
+  :deep(.el-input__icon)  {
     line-height: 30px !important;
   }
   .label {
