@@ -578,7 +578,16 @@ service.interceptors.response.use(
  * 导出常用的请求方法
  * 根据运行环境选择不同的请求方式，并支持离线操作
  */
-export default {
+type RequestConfigLike = {
+  url: string
+  method?: string
+  params?: any
+  data?: any
+  headers?: Record<string, any>
+  responseType?: any
+}
+
+const request = {
   /**
    * GET 请求
    * @param url 请求 URL
@@ -639,3 +648,29 @@ export default {
     return service.delete(url, { params })
   }
 }
+
+const requestCompat = Object.assign(
+  (config: RequestConfigLike) => {
+    const safeConfig = config || ({} as RequestConfigLike)
+    const method = String(safeConfig.method || 'get').toLowerCase()
+    const base = getRuntimeBaseURL()
+    if (isAbsoluteUrl(base)) {
+      if (method === 'get') return request.get(safeConfig.url, safeConfig.params)
+      if (method === 'post') return request.post(safeConfig.url, safeConfig.data)
+      if (method === 'put') return request.put(safeConfig.url, safeConfig.data)
+      if (method === 'delete') return request.delete(safeConfig.url, safeConfig.params)
+      return Promise.reject(new Error(`暂不支持的请求方法: ${method}`))
+    }
+    return service.request({
+      url: safeConfig.url,
+      method,
+      params: safeConfig.params,
+      data: safeConfig.data,
+      headers: safeConfig.headers,
+      responseType: safeConfig.responseType
+    })
+  },
+  request
+)
+
+export default requestCompat

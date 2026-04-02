@@ -89,18 +89,22 @@ export function createWindowManager(deps: WindowManagerDeps) {
     const hasPosition = Number.isInteger(bounds?.x) && Number.isInteger(bounds?.y)
 
     const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize
+    const minWidth = 800
+    const minHeight = 600
+    const defaultWidth = Math.max(minWidth, Math.floor(screenWidth * 0.7))
+    const defaultHeight = Math.max(minHeight, Math.floor(screenHeight * 0.78))
 
-    // 使用传入的边界参数（如果有的话），否则使用默认值
-    const windowWidth = bounds?.width || Math.floor(screenWidth * 0.6)
-    const windowHeight = bounds?.height || Math.floor(screenHeight * 0.6)
+    // 优先使用记忆中的窗口大小；首次启动时使用一套基础默认尺寸
+    const windowWidth = bounds?.width || defaultWidth
+    const windowHeight = bounds?.height || defaultHeight
 
     win = new BrowserWindowCtor({
       x: hasPosition ? bounds?.x : undefined,  // 使用记忆的 X 坐标
       y: hasPosition ? bounds?.y : undefined,  // 使用记忆的 Y 坐标
       width: windowWidth,
       height: windowHeight,
-      minWidth: 800,
-      minHeight: 600,
+      minWidth,
+      minHeight,
       center: !hasPosition,  // 如果有位置参数就不居中，否则居中
       resizable: true,
       autoHideMenuBar: true,

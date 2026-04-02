@@ -15,6 +15,7 @@
   - 未读消息计数徽章
 - **智能工作流**：风险处置任务分配与追踪
 - **离线模式**：断网时自动缓存操作，网络恢复后同步
+- **应用锁**：用户可锁定应用，锁定后将只显示解锁界面，不再展示业务内容。密码仅保存在当前设备本地。
 - **多平台支持**：Windows/macOS/Linux 跨平台运行
 
 ## 🛠️ 技术栈
@@ -32,13 +33,13 @@
 ## 🚀 快速开始
 ```bash
 # 安装依赖
-pnpm install
+npm install
 
 # 开发模式
-pnpm dev
+npm run dev
 
 # 生产构建
-pnpm build
+npm run build
 
 # 创建安装包
-pnpm package
+npm run package

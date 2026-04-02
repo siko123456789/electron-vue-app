@@ -1,0 +1,88 @@
+/**
+ * 工作台「处置」风险详情弹窗：白底可读样式（与报告预览同属浅色体系，保留蒙层）
+ * 在非 scoped 的 <style lang="scss"> 中 @import，并给 el-dialog 设置 custom-class 包含 dispose-workbench-shell
+ */
+
+$shell-border: #e9e8ff;
+$shell-title: #111827;
+$shell-body-text: #4b5563;
+$shell-muted: #6b7280;
+$accent-close: #7c3aed;
+
+.dispose-workbench-shell.el-dialog {
+  background: #ffffff;
+  border: 1px solid $shell-border;
+  border-radius: var(--dialog-border-radius);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(124, 58, 237, 0.06);
+  overflow: hidden;
+}
+
+.dispose-workbench-shell {
+  .el-dialog__header {
+    padding: 16px 20px 12px;
+    margin: 0;
+    border-bottom: 1px solid #ede9fe;
+    background: linear-gradient(180deg, #fafaff 0%, #ffffff 100%);
+  }
+
+  .el-dialog__title {
+    color: $shell-title;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  .el-dialog__headerbtn .el-dialog__close {
+    color: $accent-close;
+    font-size: 18px;
+    &:hover {
+      color: #5b21b6;
+    }
+  }
+
+  .el-dialog__body {
+    padding: 16px 20px 12px;
+    color: $shell-body-text;
+    background: #f3f4f6;
+  }
+
+  .el-dialog__footer {
+    padding: 12px 20px 16px;
+    border-top: 1px solid #f3f4f6;
+    background: #fafafa;
+  }
+
+  .el-dialog__footer .el-button--primary:not(.is-plain) {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    border-color: #7c3aed;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+    &:hover,
+    &:focus {
+      background: linear-gradient(135deg, #6d28d9 0%, #9333ea 100%);
+      border-color: #6d28d9;
+    }
+  }
+
+  .el-dialog__footer .el-button--default {
+    color: $shell-muted;
+    border-color: #e5e7eb;
+    background: #fff;
+    &:hover {
+      color: $accent-close;
+      border-color: #c4b5fd;
+      background: #faf5ff;
+    }
+  }
+
+  .el-dialog__footer .el-button--primary.is-plain {
+    color: #5b21b6;
+    border-color: #c4b5fd;
+    background: #f5f3ff;
+    &:hover {
+      background: #ede9fe;
+      border-color: #a78bfa;
+    }
+  }
+}
