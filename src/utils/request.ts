@@ -51,6 +51,28 @@ function joinUrl(base: string, path: string): string {
   return `${b}${p}`
 }
 
+function logResolvedRequest(info: {
+  source: string
+  method: string
+  url: string
+  baseURL?: string
+  params?: any
+  data?: any
+  config?: any
+}) {
+  try {
+    console.log('[request] 请求来源:', info.source)
+    console.log('[request] 请求方法:', info.method)
+    console.log('最终请求URL:', info.url)
+    console.log('当前base:', info.baseURL || info.config || '')
+    if (info.params !== undefined) console.log('[request] query参数:', info.params)
+    if (info.data !== undefined) console.log('[request] body参数:', info.data)
+    if (info.config !== undefined) console.log('[request] 原始配置:', info.config)
+  } catch {
+    // ignore logging failures
+  }
+}
+
 function applyAuthHeaders(headers: Record<string, any>, token: string | null) {
   const raw = String(token || '').trim()
   if (!raw) return
@@ -390,7 +412,13 @@ function handleUnauthorized() {
  * @param data 请求体数据
  * @returns 响应数据
  */
-async function requestViaIpc(method: string, url: string, params?: any, data?: any) {
+async function requestViaIpc(
+  method: string,
+  url: string,
+  params?: any,
+  data?: any,
+  extraHeaders?: Record<string, any>
+) {
   const ipc = (globalThis as any)?.ipcRenderer
   if (!ipc?.invoke) {
     throw new Error('当前环境无法通过主进程代理请求（浏览器环境会被 CORS 拦截，请在 Electron 中运行）')
@@ -398,10 +426,25 @@ async function requestViaIpc(method: string, url: string, params?: any, data?: a
 
   const base = getRuntimeBaseURL()
   const fullUrl = joinUrl(base, url) + (method === 'GET' || method === 'DELETE' ? toQuery(params) : '')
+  logResolvedRequest({
+    source: 'requestViaIpc',
+    method,
+    url: fullUrl,
+    baseURL: base,
+    params,
+    data,
+    config: { url, base, mode: 'ipc' }
+  })
 
   const token = localStorage.getItem('token')
   const headers: Record<string, string> = {
     'Content-Type': 'application/json;charset=utf-8',
+  }
+  if (extraHeaders && typeof extraHeaders === 'object') {
+    Object.entries(extraHeaders).forEach(([key, value]) => {
+      if (value === undefined || value === null) return
+      headers[key] = String(value)
+    })
   }
   applyAuthHeaders(headers, token)
   const storedCookie = getStoredIpcCookie()
@@ -479,6 +522,16 @@ const service: AxiosInstance = axios.create({
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     config.baseURL = getRuntimeBaseURL()
+    const resolvedUrl = joinUrl(String(config.baseURL || ''), String(config.url || '')) + toQuery((config as any)?.params)
+    logResolvedRequest({
+      source: 'axios-interceptor',
+      method: String(config.method || 'GET').toUpperCase(),
+      url: resolvedUrl,
+      baseURL: String(config.baseURL || ''),
+      params: (config as any)?.params,
+      data: (config as any)?.data,
+      config
+    })
     // 从本地存储中获取 token
     const token = localStorage.getItem('token')
     // 如果有 token，添加到请求头
@@ -593,18 +646,18 @@ const request = {
    * @param url 请求 URL
    * @param params URL 参数
    */
-  get: (url: string, params?: any) => {
+  get: (url: string, params?: any, headers?: Record<string, any>) => {
     const base = getRuntimeBaseURL()
     // 如果是绝对 URL，则使用 IPC 通道请求
-    if (isAbsoluteUrl(base)) return requestViaIpc('GET', url, params)
-    return service.get(url, { params })
+    if (isAbsoluteUrl(base)) return requestViaIpc('GET', url, params, undefined, headers)
+    return service.get(url, { params, headers })
   },
   /**
    * POST 请求
    * @param url 请求 URL
    * @param data 请求体数据
    */
-  post: (url: string, data?: any) => {
+  post: (url: string, data?: any, headers?: Record<string, any>) => {
     const base = getRuntimeBaseURL()
     // 检查网络状态，如果离线则将操作加入队列
     if (!navigator.onLine) {
@@ -612,15 +665,15 @@ const request = {
       return Promise.reject(new Error('当前离线：操作已缓存，联网后将尝试自动同步'))
     }
     // 如果是绝对 URL，则使用 IPC 通道请求
-    if (isAbsoluteUrl(base)) return requestViaIpc('POST', url, undefined, data)
-    return service.post(url, data)
+    if (isAbsoluteUrl(base)) return requestViaIpc('POST', url, undefined, data, headers)
+    return service.post(url, data, { headers })
   },
   /**
    * PUT 请求
    * @param url 请求 URL
    * @param data 请求体数据
    */
-  put: (url: string, data?: any) => {
+  put: (url: string, data?: any, headers?: Record<string, any>) => {
     const base = getRuntimeBaseURL()
     // 检查网络状态，如果离线则将操作加入队列
     if (!navigator.onLine) {
@@ -628,15 +681,15 @@ const request = {
       return Promise.reject(new Error('当前离线：操作已缓存，联网后将尝试自动同步'))
     }
     // 如果是绝对 URL，则使用 IPC 通道请求
-    if (isAbsoluteUrl(base)) return requestViaIpc('PUT', url, undefined, data)
-    return service.put(url, data)
+    if (isAbsoluteUrl(base)) return requestViaIpc('PUT', url, undefined, data, headers)
+    return service.put(url, data, { headers })
   },
   /**
    * DELETE 请求
    * @param url 请求 URL
    * @param params URL 参数
    */
-  delete: (url: string, params?: any) => {
+  delete: (url: string, params?: any, headers?: Record<string, any>) => {
     const base = getRuntimeBaseURL()
     // 检查网络状态，如果离线则将操作加入队列
     if (!navigator.onLine) {
@@ -644,8 +697,8 @@ const request = {
       return Promise.reject(new Error('当前离线：操作已缓存，联网后将尝试自动同步'))
     }
     // 如果是绝对 URL，则使用 IPC 通道请求
-    if (isAbsoluteUrl(base)) return requestViaIpc('DELETE', url, params)
-    return service.delete(url, { params })
+    if (isAbsoluteUrl(base)) return requestViaIpc('DELETE', url, params, undefined, headers)
+    return service.delete(url, { params, headers })
   }
 }
 
@@ -655,10 +708,10 @@ const requestCompat = Object.assign(
     const method = String(safeConfig.method || 'get').toLowerCase()
     const base = getRuntimeBaseURL()
     if (isAbsoluteUrl(base)) {
-      if (method === 'get') return request.get(safeConfig.url, safeConfig.params)
-      if (method === 'post') return request.post(safeConfig.url, safeConfig.data)
-      if (method === 'put') return request.put(safeConfig.url, safeConfig.data)
-      if (method === 'delete') return request.delete(safeConfig.url, safeConfig.params)
+      if (method === 'get') return request.get(safeConfig.url, safeConfig.params, safeConfig.headers)
+      if (method === 'post') return request.post(safeConfig.url, safeConfig.data, safeConfig.headers)
+      if (method === 'put') return request.put(safeConfig.url, safeConfig.data, safeConfig.headers)
+      if (method === 'delete') return request.delete(safeConfig.url, safeConfig.params, safeConfig.headers)
       return Promise.reject(new Error(`暂不支持的请求方法: ${method}`))
     }
     return service.request({

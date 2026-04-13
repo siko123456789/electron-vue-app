@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { clearStoredNdrAuthorKey } from '@/utils/ndr'
 
 export type UserInfo = {
   username?: string
@@ -68,6 +69,7 @@ export const useAuthStore = defineStore('auth', {
       this.userInfo = null
       localStorage.removeItem(STORAGE_KEYS.token)
       localStorage.removeItem(STORAGE_KEYS.userInfo)
+      clearStoredNdrAuthorKey()
     },
   },
 })

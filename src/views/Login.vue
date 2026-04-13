@@ -80,6 +80,7 @@
 	import { login as loginApi } from "@/api/login"
 	import { useAuthStore } from "@/stores/auth"
 	import { useSettingsStore } from "@/stores/settings"
+	import { ensureNdrAuthorKey } from "@/utils/ndr"
 
 	const router = useRouter()
 	const authStore = useAuthStore()
@@ -133,7 +134,12 @@ const rules = {
 		        : ((localStorage.getItem("token") || "").trim())
 
 		      // Token is preferred; if backend uses cookie/session and doesn't expose token, allow entry with userInfo.
-		      authStore.setAuth({ token: token || null, userInfo: res.data })
+			      authStore.setAuth({ token: token || null, userInfo: res.data })
+			      try {
+			        await ensureNdrAuthorKey(true)
+			      } catch (error) {
+			        console.warn("init ndrAuthorKey failed:", error)
+			      }
 		      ElMessage.success("登录成功")
 	      router.push("/workbench")
 

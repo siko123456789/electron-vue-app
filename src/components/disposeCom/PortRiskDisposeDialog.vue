@@ -16,7 +16,6 @@
           <el-button
             link
             class="dispose-risk-back-btn"
-            :icon="ArrowLeft"
             @click="emitEmbeddedSubViewBack"
           >返回详情</el-button>
           <span class="dispose-risk-dialog-heading">

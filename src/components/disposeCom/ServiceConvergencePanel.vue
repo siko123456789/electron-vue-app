@@ -711,6 +711,15 @@ export default {
     }
   },
   methods: {
+    logApiRequest (apiName, payload) {
+      console.log(`[ServiceConvergencePanel] ${apiName} request:`, payload)
+    },
+    logApiSuccess (apiName, response) {
+      console.log(`[ServiceConvergencePanel] ${apiName} response:`, response)
+    },
+    logApiError (apiName, error) {
+      console.error(`[ServiceConvergencePanel] ${apiName} error:`, error)
+    },
     /** 生成待下发策略预览数据 */
     buildIssuePreviewRows () {
       // 方法用途：将左侧勾选的访问关系与“all 黑名单（当前端口）”合并为待下发策略列表
@@ -852,8 +861,10 @@ export default {
         pageSize: 99999
       }
       this.checkingAgentInstalled = true
+      this.logApiRequest('agentIsInstalled', requestPayload)
       agentIsInstalled(requestPayload)
         .then(responseData => {
+          this.logApiSuccess('agentIsInstalled', responseData)
           const installedAgentList =
             responseData &&
             responseData.data &&
@@ -882,7 +893,8 @@ export default {
             this.getAgentGroupList()
           }
         })
-        .catch(() => {
+        .catch(error => {
+          this.logApiError('agentIsInstalled', error)
           this.hasInstalledAgent = false
           this.installedAgentId = ''
           this.hostPolicyRows = []
@@ -942,13 +954,16 @@ export default {
     querySrcIpsByDestIpPort () {
       const realDestIp = this.getRealDestIp()
       const realDestPort = this.getRealDestPort()
-      querySrcIpsByDestIpPortAPI({
+      const requestPayload = {
         dest_ip: realDestIp,
         dest_port: realDestPort,
         page: 1,
         page_size: 99999
-      })
+      }
+      this.logApiRequest('querySrcIpsByDestIpPortAPI', requestPayload)
+      querySrcIpsByDestIpPortAPI(requestPayload)
         .then(responseBody => {
+          this.logApiSuccess('querySrcIpsByDestIpPortAPI', responseBody)
           // 方法用途：兼容 { data: { items, total } } 与扁平结构，避免解构错误导致列表不刷新
           const outer =
             responseBody && typeof responseBody === 'object' ? responseBody : {}
@@ -978,7 +993,8 @@ export default {
             this.selectedAccessRows = []
           })
         })
-        .catch(() => {
+        .catch(error => {
+          this.logApiError('querySrcIpsByDestIpPortAPI', error)
           this.accessRelationshipList = []
           this.accessRelationshipTotal = 0
           this.selectedAccessRows = []
@@ -1000,8 +1016,10 @@ export default {
         condition: `dst_addr=${realDestIp}`
       }
       this.bypassPolicyLoading = true
+      this.logApiRequest('queryPolicyList', requestPayload)
       queryPolicyList(requestPayload)
         .then(responseData => {
+          this.logApiSuccess('queryPolicyList', responseData)
           this.bypassPolicyRows =
             responseData &&
             responseData.data &&
@@ -1009,7 +1027,8 @@ export default {
               ? responseData.data.rules
               : []
         })
-        .catch(() => {
+        .catch(error => {
+          this.logApiError('queryPolicyList', error)
           this.$message.error('旁路策略列表加载失败')
         })
         .finally(() => {
@@ -1030,8 +1049,10 @@ export default {
         cond: `agentId=${agentId}andport=${realDestPort}`
       }
       this.hostPolicyLoading = true
+      this.logApiRequest('queryAgentRule', queryParams)
       queryAgentRule(queryParams)
         .then(responseData => {
+          this.logApiSuccess('queryAgentRule', responseData)
           const hostRuleList = Array.isArray(responseData)
             ? responseData
             : Array.isArray(responseData && responseData.data)
@@ -1067,7 +1088,8 @@ export default {
             }
           })
         })
-        .catch(() => {
+        .catch(error => {
+          this.logApiError('queryAgentRule', error)
           this.$message.error('主机策略列表加载失败')
         })
         .finally(() => {
@@ -1103,8 +1125,11 @@ export default {
       }
       this.agentNameLoading = true
       this.agentNameStatus = ''
-      agentNameIsAvailableAPI({ name: agentName })
+      const requestPayload = { name: agentName }
+      this.logApiRequest('agentNameIsAvailableAPI', requestPayload)
+      agentNameIsAvailableAPI(requestPayload)
         .then(({ data }) => {
+          this.logApiSuccess('agentNameIsAvailableAPI', data)
           if (data === null || data === undefined || Number(data) > 0) {
             this.agentNameStatus = 'error'
             this.agentNameHint = '名称不可用'
@@ -1113,7 +1138,8 @@ export default {
             this.agentNameHint = ''
           }
         })
-        .catch(() => {
+        .catch(error => {
+          this.logApiError('agentNameIsAvailableAPI', error)
           this.agentNameStatus = 'error'
           this.agentNameHint = '名称校验失败'
         })
@@ -1125,7 +1151,9 @@ export default {
     /** 查询 Agent 组列表 */
     getAgentGroupList () {
       // 方法用途：获取 Agent 分组列表用于安装表单选择
+      this.logApiRequest('queryAgentGroupList', null)
       queryAgentGroupList().then(({ data }) => {
+        this.logApiSuccess('queryAgentGroupList', data)
         this.agentInstallGroupList = data && data.datas ? data.datas : []
       })
     },
@@ -1146,14 +1174,18 @@ export default {
         this.agentInstallCommand = ''
         return
       }
-      agentInstallAPI({
+      const requestPayload = {
         os: packageGroup,
         host,
         name,
         group
-      }).then(({ data }) => {
+      }
+      this.logApiRequest('agentInstallAPI', requestPayload)
+      agentInstallAPI(requestPayload).then(({ data }) => {
+        this.logApiSuccess('agentInstallAPI', data)
         this.agentInstallCommand = data && data.install ? data.install : ''
       })
+      console.log(this.agentInstallCommand,111111)
     },
     /** 新增 Agent 组 */
     createAgentGroup () {
@@ -1169,7 +1201,10 @@ export default {
             this.$message.error('组名不能为空')
             return
           }
-          createAgentGroupAPI({ group_id: value }).then(({ msg }) => {
+          const requestPayload = { group_id: value }
+          this.logApiRequest('createAgentGroupAPI', requestPayload)
+          createAgentGroupAPI(requestPayload).then(({ msg }) => {
+            this.logApiSuccess('createAgentGroupAPI', msg)
             this.$message(msg || '创建成功')
             this.getAgentGroupList()
           })
@@ -1256,7 +1291,9 @@ export default {
               }))
             }
           }
+          this.logApiRequest('batchAgentRule', requestPayload)
           return batchAgentRule(requestPayload).then(responseData => {
+            this.logApiSuccess('batchAgentRule', responseData)
             if (!responseData || responseData.code !== 0) {
               this.$message.error(
                 (responseData && responseData.msg) || '确认优化失败'
@@ -1303,7 +1340,9 @@ export default {
           }))
         }
       }
+      this.logApiRequest('batchAgentRule', requestPayload)
       return batchAgentRule(requestPayload).then(responseData => {
+        this.logApiSuccess('batchAgentRule', responseData)
         if (!responseData || responseData.code !== 0) {
           this.$message.error(
             (responseData && responseData.msg) || '确认优化失败'
@@ -1342,8 +1381,10 @@ export default {
           rules: rulesContent
         }
       }
+      this.logApiRequest('batchAgentRule', requestBody)
       batchAgentRule(requestBody)
         .then(res => {
+          this.logApiSuccess('batchAgentRule', res)
           if (!res || res.code !== 0) {
             this.$message.error((res && res.msg) || '策略下发失败')
             return
@@ -1355,6 +1396,7 @@ export default {
           this.fetchHostPolicyRows(this.installedAgentId)
         })
         .catch(error => {
+          this.logApiError('batchAgentRule', error)
           console.error('handleSubmit error:', error)
           this.$message.error((error && error.message) || '策略下发失败')
         })

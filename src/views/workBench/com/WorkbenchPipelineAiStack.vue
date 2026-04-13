@@ -23,9 +23,9 @@
               </span>
               <span class="pending-glass-title">待执行任务</span>
             </div>
-            <el-icon class="pending-glass-chevron">
+            <!-- <el-icon class="pending-glass-chevron">
               <ArrowRight />
-            </el-icon>
+            </el-icon> -->
           </div>
           <div class="pending-glass-total">{{ pendingTotalDisplay }}</div>
           <div class="pending-glass-rows">
@@ -212,20 +212,6 @@
                     <template v-if="dispositionCategoryKind === 'weak'">
                       <div class="emergency-spot emergency-spot--weak">
                         <div class="emergency-spot-title">{{ emergencyVulnName || '弱口令风险' }}</div>
-                        <div class="emergency-spot-chips">
-                          <el-tag
-                            v-if="emergencyRiskScoreDisplay !== ''"
-                            size="small"
-                            type="warning"
-                            effect="dark"
-                          >风险分 {{ emergencyRiskScoreDisplay }}</el-tag>
-                          <el-tag
-                            v-if="emergencyVulnLevelLabelForCard"
-                            size="small"
-                            effect="plain"
-                            class="emergency-chip-level"
-                          >{{ emergencyVulnLevelLabelForCard }}</el-tag>
-                        </div>
                       </div>
                       <div class="emergency-kv-grid">
                         <div class="emergency-kv">
@@ -1743,12 +1729,12 @@ export default {
 .pending-glass-head,
 .disposition-glass-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
+  gap: 14px 18px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
   border-bottom: 1px solid #f1e9fb;
 }
 
@@ -1756,7 +1742,16 @@ export default {
 .disposition-glass-head-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 340px;
+}
+
+.disposition-glass-titles {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -1779,9 +1774,17 @@ export default {
 .disposition-glass-empty-title,
 .emergency-header-title {
   font-size: var(--wbp-fs-title);
-  line-height: 1.2;
+  line-height: 1.14;
   font-weight: 800;
   color: #1f2430;
+}
+
+.disposition-glass-title {
+  letter-spacing: -0.02em;
+}
+
+.disposition-glass-subtitle {
+  line-height: 1.4;
 }
 
 .disposition-glass-subtitle,
@@ -1794,6 +1797,7 @@ export default {
 .pending-glass-row-label {
   font-size: var(--wbp-fs-caption);
   color: #8d95a7;
+  margin-right: 5px;
 }
 
 .pending-glass-chevron {
@@ -1885,7 +1889,7 @@ export default {
 .pending-glass-info-btn,
 .pending-glass-foot :deep(.wb-glass-btn),
 .disposition-glass-actions :deep(.wb-glass-btn) {
-  min-height: 32px;
+  min-height: 38px;
   border-radius: 999px;
   font-size: var(--wbp-fs-body);
   font-weight: 700;
@@ -1914,7 +1918,19 @@ export default {
 .disposition-glass-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px 12px;
+  justify-content: flex-end;
+  flex: 0 1 460px;
+  margin-left: auto;
+}
+
+.wb-glass-btn-tooltip-wrap {
+  display: inline-flex;
+}
+
+.disposition-glass-actions :deep(.wb-glass-btn) {
+  min-width: 88px;
+  padding: 0 18px;
 }
 
 .disposition-glass-actions :deep(.wb-glass-btn--blue),
@@ -1984,13 +2000,13 @@ export default {
 }
 
 .emergency-card :deep(.el-card__body) {
-  padding: 16px;
+  padding: 22px 24px;
 }
 
 .emergency-inner {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 200px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: 18px;
   align-items: stretch;
   position: relative;
 }
@@ -2020,7 +2036,8 @@ export default {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px 14px;
+  margin-bottom: 2px;
 }
 
 .emergency-header-icon {
@@ -2032,7 +2049,7 @@ export default {
 .emergency-body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -2044,7 +2061,7 @@ export default {
 .emergency-credential {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 8px;
+  gap: 8px 12px;
 }
 
 .emergency-meta-item,
@@ -2091,8 +2108,8 @@ export default {
 }
 
 .emergency-spot {
-  padding: 10px;
-  border-radius: 12px;
+  padding: 16px 16px 14px;
+  border-radius: 16px;
   border: 1px solid #f0e4e8;
   background: rgba(255, 255, 255, 0.7);
 }
@@ -2120,8 +2137,8 @@ export default {
 
 .emergency-kv-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 14px 20px;
 }
 
 .emergency-cve-primary,
@@ -2138,22 +2155,28 @@ export default {
 .emergency-desc,
 .emergency-credential,
 .emergency-actions {
-  padding-top: 8px;
-  margin-top: 4px;
+  padding-top: 12px;
+  margin-top: 2px;
   border-top: 1px solid #f3d4d9;
 }
 
 .emergency-actions {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+  border-left: 1px solid #f3d4d9;
+  padding-left: 18px;
 }
 
 .emergency-actions :deep(.el-button--danger) {
-  width: min(220px, 100%);
-  min-height: 44px;
-  border-radius: 14px;
-  font-size: 14px;
+  width: 100%;
+  align-self: center;
+  min-height: 52px;
+  border-radius: 16px;
+  font-size: 16px;
   font-weight: 900;
   background: linear-gradient(180deg, #ff0b52 0%, #ef0048 100%) !important;
   border-color: transparent !important;
@@ -2175,6 +2198,15 @@ export default {
     min-height: auto;
   }
 
+  .disposition-glass-head {
+    gap: 12px;
+  }
+
+  .disposition-glass-actions {
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
   .pending-glass-row {
     min-height: 44px;
     padding: 0 10px;
@@ -2192,9 +2224,18 @@ export default {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .emergency-actions {
+    border-left: none;
+    border-top: 1px solid #f3d4d9;
+    padding-left: 0;
+    padding-top: 12px;
+    margin-top: 2px;
+  }
+
   .emergency-actions :deep(.el-button--danger) {
     width: 100%;
     min-height: 40px;
+    font-size: 14px;
   }
 }
 
