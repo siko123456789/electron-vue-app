@@ -36,6 +36,10 @@ let appLogger: Logger | null = null
 // 使用 Node TLS，需要单独设置；必须在建立任何 HTTPS/WSS 连接前生效。
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
+// 部分 Windows 显卡驱动与 Electron Chromium 渲染进程不兼容时会直接白屏崩溃。
+// 当前应用以稳定显示为优先，关闭硬件加速，改用软件渲染。
+app.disableHardwareAcceleration()
+
 // ============= 路径配置 =============
 
 /**
