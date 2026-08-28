@@ -31,6 +31,11 @@ import type { Logger } from './main/logger'
 
 let appLogger: Logger | null = null
 
+// 内网环境没有可校验的 HTTPS/WSS 证书时，关闭 Node 主进程的 TLS 证书校验。
+// Electron 的 ignore-certificate-errors 只覆盖 Chromium 网络层，主进程 WebSocket
+// 使用 Node TLS，需要单独设置；必须在建立任何 HTTPS/WSS 连接前生效。
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+
 // ============= 路径配置 =============
 
 /**
