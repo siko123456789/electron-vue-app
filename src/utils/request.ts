@@ -516,7 +516,8 @@ async function requestViaIpc(
   url: string,
   params?: any,
   data?: any,
-  extraHeaders?: Record<string, any>
+  extraHeaders?: Record<string, any>,
+  requestOptions?: { signal?: AbortSignal }
 ) {
   const ipc = (globalThis as any)?.ipcRenderer
   if (!ipc?.invoke) {
@@ -551,7 +552,21 @@ async function requestViaIpc(
 
   const body = method === 'GET' || method === 'DELETE' ? null : (data !== undefined ? JSON.stringify(data) : null)
   try {
-    const res = await ipc.invoke('http-request', { method, url: fullUrl, headers, body })
+    const invokePromise = ipc.invoke('http-request', { method, url: fullUrl, headers, body })
+    const signal = requestOptions?.signal
+    if (signal?.aborted) throw new DOMException('The operation was aborted', 'AbortError')
+    const res = signal
+      ? await Promise.race([
+          invokePromise,
+          new Promise<never>((_, reject) => {
+            signal.addEventListener(
+              'abort',
+              () => reject(new DOMException('The operation was aborted', 'AbortError')),
+              { once: true },
+            )
+          }),
+        ])
+      : await invokePromise
     const status = Number(res?.status || 0)
     const resHeaders = res?.headers
 
@@ -742,6 +757,11 @@ type RequestConfigLike = {
   data?: any
   headers?: Record<string, any>
   responseType?: any
+  signal?: AbortSignal
+}
+
+type RequestOptions = {
+  signal?: AbortSignal
 }
 
 const request = {
@@ -750,18 +770,18 @@ const request = {
    * @param url 请求 URL
    * @param params URL 参数
    */
-  get: (url: string, params?: any, headers?: Record<string, any>) => {
+  get: (url: string, params?: any, headers?: Record<string, any>, options?: RequestOptions) => {
     const base = getRuntimeBaseURL()
     // 如果是绝对 URL，则使用 IPC 通道请求
-    if (isAbsoluteUrl(base)) return requestViaIpc('GET', url, params, undefined, headers)
-    return service.get(url, { params, headers })
+    if (isAbsoluteUrl(base)) return requestViaIpc('GET', url, params, undefined, headers, options)
+    return service.get(url, { params, headers, signal: options?.signal })
   },
   /**
    * POST 请求
    * @param url 请求 URL
    * @param data 请求体数据
    */
-  post: (url: string, data?: any, headers?: Record<string, any>) => {
+  post: (url: string, data?: any, headers?: Record<string, any>, options?: RequestOptions) => {
     const base = getRuntimeBaseURL()
     // 检查网络状态，如果离线则将操作加入队列
     if (!navigator.onLine) {
@@ -769,8 +789,8 @@ const request = {
       return Promise.reject(new Error('当前离线：操作已缓存，联网后将尝试自动同步'))
     }
     // 如果是绝对 URL，则使用 IPC 通道请求
-    if (isAbsoluteUrl(base)) return requestViaIpc('POST', url, undefined, data, headers)
-    return service.post(url, data, { headers })
+    if (isAbsoluteUrl(base)) return requestViaIpc('POST', url, undefined, data, headers, options)
+    return service.post(url, data, { headers, signal: options?.signal })
   },
   /**
    * PUT 请求
@@ -812,8 +832,8 @@ const requestCompat = Object.assign(
     const method = String(safeConfig.method || 'get').toLowerCase()
     const base = getRuntimeBaseURL()
     if (isAbsoluteUrl(base)) {
-      if (method === 'get') return request.get(safeConfig.url, safeConfig.params, safeConfig.headers)
-      if (method === 'post') return request.post(safeConfig.url, safeConfig.data, safeConfig.headers)
+      if (method === 'get') return request.get(safeConfig.url, safeConfig.params, safeConfig.headers, safeConfig)
+      if (method === 'post') return request.post(safeConfig.url, safeConfig.data, safeConfig.headers, safeConfig)
       if (method === 'put') return request.put(safeConfig.url, safeConfig.data, safeConfig.headers)
       if (method === 'delete') return request.delete(safeConfig.url, safeConfig.params, safeConfig.headers)
       return Promise.reject(new Error(`暂不支持的请求方法: ${method}`))

@@ -217,21 +217,24 @@
       v-model="detailVisible"
       :row="detailRow"
       @detail-updated="handleDetailUpdated"
+      @update:model-value="handleRealtimeDetailVisibility"
     />
     <BlockedAccessDetailPanel
       v-model="blockedDetailVisible"
       :row="blockedDetailRow"
+      @update:model-value="handleRealtimeDetailVisibility"
     />
     <VulnerabilityDetailPanel
       v-model="vulnerabilityDetailVisible"
       :row="vulnerabilityDetailRow"
+      @update:model-value="handleRealtimeDetailVisibility"
     />
     <CriticalVulnGovern
       v-if="governEventDetailKind === 'critical'"
       :visible="governEventDetailVisible"
       :single-task-mode="true"
       :external-task-list="governEventDetailList"
-      @update:visible="governEventDetailVisible = $event"
+      @update:visible="governEventDetailVisible = $event; handleRealtimeDetailVisibility($event)"
       @refresh="handleGovernRefresh"
       @status-updated="handleGovernStatusUpdated"
     />
@@ -240,7 +243,7 @@
       :visible="governEventDetailVisible"
       :single-task-mode="true"
       :external-task-list="governEventDetailList"
-      @update:visible="governEventDetailVisible = $event"
+      @update:visible="governEventDetailVisible = $event; handleRealtimeDetailVisibility($event)"
       @refresh="handleGovernRefresh"
       @status-updated="handleGovernStatusUpdated"
     />
@@ -249,7 +252,7 @@
       :visible="governEventDetailVisible"
       :single-task-mode="true"
       :external-task-list="governEventDetailList"
-      @update:visible="governEventDetailVisible = $event"
+      @update:visible="governEventDetailVisible = $event; handleRealtimeDetailVisibility($event)"
       @refresh="handleGovernRefresh"
       @status-updated="handleGovernStatusUpdated"
     />
@@ -506,17 +509,6 @@ async function fetchEventTypeOptions() {
   }
 }
 
-function buildQuery() {
-  return buildNotifyListBody({
-    current_page: page.value,
-    page_size: pageSize.value,
-    status: filters.status,
-    priority: filters.priority,
-    event_type: filters.event_type,
-    time_range: filters.time_range,
-  })
-}
-
 async function fetchOverview() {
   try {
     const payload = buildNotifySummaryBody(filters.time_range)
@@ -543,16 +535,35 @@ async function fetchOverview() {
   }
 }
 
-async function fetchList() {
+async function fetchList(targetPage = page.value) {
+  listAbortController?.abort()
+  const controller = new AbortController()
+  listAbortController = controller
   loading.value = true
   try {
-    const payload = buildQuery()
-    const res = await fetchNotifyList(payload)
+    const payload = buildNotifyListBody({
+      current_page: targetPage,
+      page_size: pageSize.value,
+      status: filters.status,
+      priority: filters.priority,
+      event_type: filters.event_type,
+      time_range: filters.time_range,
+    })
+    const res = await fetchNotifyList(payload, controller.signal)
+    if (controller.signal.aborted || listAbortController !== controller) return
 
     if (res?.code === 0 && res.data) {
       const data = res.data
+      page.value = targetPage
       tableData.value = Array.isArray(data.list) ? data.list : []
       total.value = Number(data.total) || 0
+      if (data.summary && typeof data.summary === 'object') {
+        overview.all = Number(data.summary.all) || 0
+        overview.p0 = Number(data.summary.p0) || 0
+        overview.p1 = Number(data.summary.p1) || 0
+        overview.p2 = Number(data.summary.p2) || 0
+        overview.handled = Number(data.summary.handled) || 0
+      }
       // 不要回写 page / pageSize：会触发分页组件 current-change / size-change，导致再打一次 list
     } else {
       tableData.value = []
@@ -560,13 +571,17 @@ async function fetchList() {
       ElMessage.error(res?.msg || '获取风险监测列表失败')
     }
   } catch (error) {
+    if (controller.signal.aborted || listAbortController !== controller) return
     tableData.value = []
     total.value = 0
     console.error('[风险监测] notify/list 请求失败 =>', error)
     const message = error instanceof Error ? error.message : String(error)
     ElMessage.error(message || '获取风险监测列表失败')
   } finally {
-    loading.value = false
+    if (listAbortController === controller) {
+      loading.value = false
+      listAbortController = null
+    }
   }
 }
 
@@ -930,6 +945,38 @@ function handleDetailUpdated(updatedRow: RiskMonitorItem) {
 const notifyRealtime = useNotifyRealtimeStore()
 const highlightAlertId = ref<string | null>(null)
 let focusingAlertId: string | null = null
+let listAbortController: AbortController | null = null
+let realtimeListRefreshTimer: number | null = null
+let realtimeListDirty = false
+
+function hasOpenRealtimeDetail() {
+  return detailVisible.value || blockedDetailVisible.value || vulnerabilityDetailVisible.value || governEventDetailVisible.value
+}
+
+function clearRealtimeListRefreshTimer() {
+  if (!realtimeListRefreshTimer) return
+  window.clearTimeout(realtimeListRefreshTimer)
+  realtimeListRefreshTimer = null
+}
+
+function queueRealtimeListRefresh() {
+  realtimeListDirty = true
+  clearRealtimeListRefreshTimer()
+  if (hasOpenRealtimeDetail()) return
+  realtimeListRefreshTimer = window.setTimeout(() => {
+    realtimeListRefreshTimer = null
+    if (hasOpenRealtimeDetail()) return
+    realtimeListDirty = false
+    void fetchList()
+  }, 2000)
+}
+
+function handleRealtimeDetailVisibility(visible: boolean) {
+  if (visible || !realtimeListDirty) return
+  clearRealtimeListRefreshTimer()
+  realtimeListDirty = false
+  void fetchList()
+}
 
 function tableRowClassName({ row }: { row: RiskMonitorItem }) {
   return highlightAlertId.value && String(row.id) === highlightAlertId.value
@@ -955,18 +1002,28 @@ async function bindFocusAlert(alertId: string) {
 
   try {
     // 尽量露出该条：清级别筛选、待处理、回第一页
-    filters.priority = ''
+    filters.priority = 0
     filters.status = 0
-    activeMetric.value = 'all'
+    activeMetric.value = 'p0'
     await resetPageSilent(1)
-    await fetchOverview()
     await fetchEventTypeOptions()
-    await fetchList()
+    let row: RiskMonitorItem | null = null
+    let foundPage = 1
+    await fetchList(1)
+    row = tableData.value.find((item) => String(item.id) === id) || null
 
-    let row = tableData.value.find((item) => String(item.id) === id) || null
+    const pageCount = Math.ceil(total.value / pageSize.value)
+    for (let candidatePage = 2; !row && candidatePage <= pageCount; candidatePage += 1) {
+      await fetchList(candidatePage)
+      row = tableData.value.find((item) => String(item.id) === id) || null
+      if (row) foundPage = candidatePage
+    }
+    if (row) page.value = foundPage
+
+    row = tableData.value.find((item) => String(item.id) === id) || null
     if (!row) {
       // 当前页没有则放宽状态再试一次
-      filters.status = ''
+      filters.status = 0
       await fetchList()
       row = tableData.value.find((item) => String(item.id) === id) || null
     }
@@ -1035,7 +1092,7 @@ watch(
   (rev, prev) => {
     if (rev <= 0) return
     if (typeof prev === 'number' && rev <= prev) return
-    void fetchList()
+    queueRealtimeListRefresh()
   },
 )
 

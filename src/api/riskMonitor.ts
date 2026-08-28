@@ -86,6 +86,7 @@ export type NotifyListData = {
   page?: number
   page_size?: number
   size?: number
+  summary?: NotifySummaryData
 }
 
 export type ApiResult<T> = {
@@ -275,8 +276,8 @@ export function fetchNotifySummary(data: NotifySummaryParams) {
  * 风险监测列表
  * POST /api/notify/list
  */
-export function fetchNotifyList(data: NotifyListParams) {
-  return request.post('/notify/list', data) as Promise<ApiResult<NotifyListData>>
+export function fetchNotifyList(data: NotifyListParams, signal?: AbortSignal) {
+  return request.post('/notify/list', data, undefined, { signal }) as Promise<ApiResult<NotifyListData>>
 }
 
 export type NotifyDetailParams = {
