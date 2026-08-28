@@ -27,6 +27,9 @@ import { createAlertManager } from './main/alert-manager'         // 告警通�
 import { createTestAlertsRunner } from './main/test-alerts'        // 测试告警功能
 import { registerAppIpcHandlers } from './main/app-ipc'            // 应用级 IPC 处理器
 import { createAppLogger } from './main/logger'                   // 本地文件日志
+import type { Logger } from './main/logger'
+
+let appLogger: Logger | null = null
 
 // ============= 路径配置 =============
 
@@ -380,6 +383,7 @@ const alertManager = createAlertManager({
 
 const notifyWsManager = createNotifyWsManager({
   getWin: () => windowManager.getWin(),
+  writeLog: (level, message, meta) => appLogger?.log(level, message, meta),
   showAlert: (payload) => alertManager.showAlert(payload as any, BrowserWindow),
 })
 
@@ -538,8 +542,8 @@ app.whenReady().then(() => {
   let configStore: ReturnType<typeof createConfigStore> | null = null
   configStore = createConfigStore(path.join(app.getPath('userData'), 'app-config.json'))
 
-  const logger = createAppLogger(app)
-  logger.info('应用启动', { version: app.getVersion(), platform: process.platform })
+  appLogger = createAppLogger(app)
+  appLogger.info('应用启动', { version: app.getVersion(), platform: process.platform })
 
   // ============= 忽略 HTTPS 证书错误 =============
 
@@ -608,7 +612,7 @@ app.whenReady().then(() => {
       await configStore?.saveAppConfig({ notificationsEnabled })
       return notificationsEnabled
     },
-    logger,
+    logger: appLogger as Logger,
   })
 
   // ============= 创建主窗口 =============

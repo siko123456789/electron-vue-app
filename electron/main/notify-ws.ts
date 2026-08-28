@@ -8,6 +8,7 @@ export type NotifyWsConnectOpts = {
 
 type NotifyWsManagerDeps = {
   getWin: () => BrowserWindow | null
+  writeLog?: (level: 'INFO' | 'WARN' | 'ERROR', message: string, meta?: Record<string, unknown>) => void
   showAlert?: (payload: {
     title: string
     message: string
@@ -38,6 +39,10 @@ export function createNotifyWsManager(deps: NotifyWsManagerDeps) {
   let gaveUp = false
   /** 主动 stop / 替换连接时置位，仅作用于当前要丢掉的那次 close */
   let ignoreNextClose = false
+
+  function writeLog(level: 'INFO' | 'WARN' | 'ERROR', message: string, meta?: Record<string, unknown>) {
+    deps.writeLog?.(level, message, meta)
+  }
 
   function clearReconnect() {
     if (!reconnectTimer) return
@@ -111,6 +116,10 @@ export function createNotifyWsManager(deps: NotifyWsManagerDeps) {
       msg: '通知长连接已断开，请检查网络后手动重连',
     }
     console.error('[notify-ws] gave up after', failAttempts, 'attempts')
+    writeLog('ERROR', '通知 WebSocket 重连失败并停止重试', {
+      attempts: failAttempts,
+      maxAttempts: MAX_RECONNECT_ATTEMPTS,
+    })
     broadcast('notify-ws/status', payload)
     try {
       deps.showAlert?.({
@@ -138,6 +147,12 @@ export function createNotifyWsManager(deps: NotifyWsManagerDeps) {
       reason,
       attempt: failAttempts,
       max: MAX_RECONNECT_ATTEMPTS,
+      delayMs: RECONNECT_DELAY_MS,
+    })
+    writeLog('WARN', '通知 WebSocket 安排重连', {
+      reason,
+      attempt: failAttempts,
+      maxAttempts: MAX_RECONNECT_ATTEMPTS,
       delayMs: RECONNECT_DELAY_MS,
     })
     broadcast('notify-ws/status', {
@@ -185,9 +200,17 @@ export function createNotifyWsManager(deps: NotifyWsManagerDeps) {
         console.log('[notify-ws] connecting =>', lastOpts!.url, {
           attempt: failAttempts || 0,
         })
+        writeLog('INFO', '通知 WebSocket 开始连接', {
+          url: lastOpts!.url,
+          attempt: failAttempts || 0,
+        })
         return new WebSocket(lastOpts!.url, { headers } as any)
       } catch (error) {
         console.warn('[notify-ws] connect throw =>', error)
+        writeLog('ERROR', '通知 WebSocket 创建连接失败', {
+          url: lastOpts!.url,
+          error: String(error),
+        })
         broadcast('notify-ws/status', { connected: false, error: String(error) })
         scheduleReconnect('connect_throw')
         return null
@@ -202,6 +225,7 @@ export function createNotifyWsManager(deps: NotifyWsManagerDeps) {
       failAttempts = 0
       gaveUp = false
       console.log('[notify-ws] connected')
+      writeLog('INFO', '通知 WebSocket 连接成功', { url: lastOpts?.url || '' })
       touchHeartbeat()
       broadcast('notify-ws/status', {
         connected: true,
@@ -234,9 +258,13 @@ export function createNotifyWsManager(deps: NotifyWsManagerDeps) {
       broadcast('notify-ws/message', raw)
     })
 
-    myWs.addEventListener('error', () => {
+    myWs.addEventListener('error', (event) => {
       if (ws !== myWs) return
       console.warn('[notify-ws] error (will reconnect on close)')
+      writeLog('ERROR', '通知 WebSocket 连接错误', {
+        url: lastOpts?.url || '',
+        error: String(event || 'WebSocket error'),
+      })
     })
 
     myWs.addEventListener('close', (ev) => {
@@ -257,6 +285,12 @@ export function createNotifyWsManager(deps: NotifyWsManagerDeps) {
       console.log('[notify-ws] closed', {
         code: ev.code,
         reason: ev.reason,
+      })
+      writeLog('WARN', '通知 WebSocket 已关闭', {
+        url: lastOpts?.url || '',
+        code: ev.code,
+        reason: ev.reason,
+        wasClean: ev.wasClean,
       })
       ws = null
       if (stopped || gaveUp) {
