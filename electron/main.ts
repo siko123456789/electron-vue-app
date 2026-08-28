@@ -119,7 +119,8 @@ let notificationsEnabled = true
  */
 const windowManager = createWindowManager({
   writeLog: (level, message, meta) => appLogger?.log(level, message, meta),
-  openDevToolsOnLaunch: !VITE_DEV_SERVER_URL,
+  // 不在生产包启动时自动打开 DevTools，避免部分 Windows 显卡/Electron 环境导致渲染进程崩溃；仍可按 F12 手动打开。
+  openDevToolsOnLaunch: false,
   startedFromAutoStart,        // 告诉窗口管理器是否是开机自启动
   MAIN_DIST,                   // 主进程编译目录（用于找 preload 脚本）
   RENDERER_DIST,               // 渲染进程编译目录（用于找 index.html）
