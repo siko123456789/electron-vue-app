@@ -109,6 +109,7 @@
 </template>
 
 <script>
+import { buildWebSocketUrl } from '@/utils/webSocketUrl'
 import { ElMessageBox } from 'element-plus'
 
 import LedgerLoading from '@/components/ledgerLoading.vue'
@@ -203,8 +204,7 @@ export default {
   methods: {
     // 构建 WebSocket 连接地址
     buildVerifyWebSocketUrl () {
-      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-      return `${protocol}//${location.host}/api/websocket/sysVulnRetest`
+      return buildWebSocketUrl('websocket/sysVulnRetest')
     },
     // 获取修复建议展示文案
     getRepairSuggestionText (vulnItem = {}) {
@@ -532,4 +532,3 @@ export default {
   }
 }
 </style>
-

@@ -113,6 +113,7 @@ import {
 } from '@/utils/aiWsFrameParser'
 import { normalizeAiWsPayloadToText } from '@/utils/aiWebSocket'
 import { renderAiMarkdown } from '@/utils/aiMarkdown'
+import { buildWebSocketUrl } from '@/utils/webSocketUrl'
 
 export default {
   name: 'RiskGovernanceAiAdvicePanel',
@@ -237,8 +238,7 @@ export default {
 
     // 方法用途：构建风险治理 WebSocket 地址
     buildRiskGovernanceWsUrl () {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      return `${protocol}//${window.location.host}/api/websocket/risk_governance`
+      return buildWebSocketUrl('websocket/risk_governance')
     },
 
     // 方法用途：停止风险治理 WebSocket 心跳
@@ -668,4 +668,3 @@ export default {
   }
 }
 </style>
-
