@@ -118,6 +118,8 @@ let notificationsEnabled = true
  * 它会记录窗口的引用，提供统一的窗口控制接口
  */
 const windowManager = createWindowManager({
+  writeLog: (level, message, meta) => appLogger?.log(level, message, meta),
+  openDevToolsOnLaunch: !VITE_DEV_SERVER_URL,
   startedFromAutoStart,        // 告诉窗口管理器是否是开机自启动
   MAIN_DIST,                   // 主进程编译目录（用于找 preload 脚本）
   RENDERER_DIST,               // 渲染进程编译目录（用于找 index.html）
