@@ -36,9 +36,6 @@ let appLogger: Logger | null = null
 // 使用 Node TLS，需要单独设置；必须在建立任何 HTTPS/WSS 连接前生效。
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
 
-// 部分 Windows 显卡驱动与 Electron Chromium 渲染进程不兼容时会直接白屏崩溃。
-// 当前应用以稳定显示为优先，关闭硬件加速，改用软件渲染。
-app.disableHardwareAcceleration()
 
 // ============= 路径配置 =============
 
@@ -122,9 +119,6 @@ let notificationsEnabled = true
  * 它会记录窗口的引用，提供统一的窗口控制接口
  */
 const windowManager = createWindowManager({
-  writeLog: (level, message, meta) => appLogger?.log(level, message, meta),
-  // 不在生产包启动时自动打开 DevTools，避免部分 Windows 显卡/Electron 环境导致渲染进程崩溃；仍可按 F12 手动打开。
-  openDevToolsOnLaunch: false,
   startedFromAutoStart,        // 告诉窗口管理器是否是开机自启动
   MAIN_DIST,                   // 主进程编译目录（用于找 preload 脚本）
   RENDERER_DIST,               // 渲染进程编译目录（用于找 index.html）

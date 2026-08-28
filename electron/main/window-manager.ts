@@ -15,8 +15,6 @@ export type WindowManagerDeps = {
   RENDERER_DIST: string
   VITE_DEV_SERVER_URL?: string
   appRoot: string
-  writeLog?: (level: 'INFO' | 'WARN' | 'ERROR', message: string, meta?: Record<string, unknown>) => void
-  openDevToolsOnLaunch?: boolean
   onReadyToShow?: () => void
   onMainWindowShown?: () => void
 }
@@ -46,10 +44,6 @@ export function createWindowManager(deps: WindowManagerDeps) {
   let isQuitting = false
   let pinnedOnTop = false
   let currentWindowState: WindowState | undefined
-
-  function writeLog(level: 'INFO' | 'WARN' | 'ERROR', message: string, meta?: Record<string, unknown>) {
-    deps.writeLog?.(level, message, meta)
-  }
 
   function persistWindowState() {
     if (!win || !currentWindowState) return
@@ -232,37 +226,6 @@ export function createWindowManager(deps: WindowManagerDeps) {
       deps.onReadyToShow?.()
     })
 
-    // 生产包白屏诊断：记录页面加载、渲染进程退出和前端 Console 错误。
-    win.webContents.on('did-start-loading', () => {
-      writeLog('INFO', '主窗口开始加载', { url: win?.webContents.getURL() || '' })
-    })
-    win.webContents.on('dom-ready', () => {
-      writeLog('INFO', '主窗口 DOM 加载完成', { url: win?.webContents.getURL() || '' })
-    })
-    win.webContents.on('did-finish-load', () => {
-      writeLog('INFO', '主窗口页面加载完成', { url: win?.webContents.getURL() || '' })
-      if (deps.openDevToolsOnLaunch && !win?.webContents.isDevToolsOpened()) {
-        win?.webContents.openDevTools({ mode: 'detach', activate: true })
-      }
-    })
-    win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
-      writeLog('ERROR', '主窗口页面加载失败', {
-        errorCode,
-        errorDescription,
-        validatedURL,
-        isMainFrame,
-      })
-    })
-    win.webContents.on('render-process-gone', (_event, details) => {
-      writeLog('ERROR', '渲染进程退出', {
-        reason: details.reason,
-        exitCode: details.exitCode,
-      })
-    })
-    win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
-      writeLog(level >= 2 ? 'ERROR' : 'INFO', '前端 Console', { level, message, line, sourceId })
-    })
-
     if (deps.VITE_DEV_SERVER_URL) {
       win.loadURL(deps.VITE_DEV_SERVER_URL)
     } else {
@@ -271,11 +234,7 @@ export function createWindowManager(deps: WindowManagerDeps) {
 
     win.webContents.on('before-input-event', (_event, input) => {
       if (input.key === 'F12') {
-        if (win?.webContents.isDevToolsOpened()) {
-          win.webContents.closeDevTools()
-        } else {
-          win.webContents.openDevTools({ mode: 'right', activate: true })
-        }
+        win?.webContents.toggleDevTools()
       }
     })
   }
