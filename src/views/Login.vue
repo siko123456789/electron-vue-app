@@ -15,7 +15,7 @@
         :rules="rules"
         label-position="top"
       >
-        <el-form-item label="服务器地址" prop="apiBase">
+        <el-form-item label="服务器地址1" prop="apiBase">
           <el-input
             v-model="form.apiBase"
             placeholder="例如 https://10.10.10.99（留空则走本地 /api 代理）"
