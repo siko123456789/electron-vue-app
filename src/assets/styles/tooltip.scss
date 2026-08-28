@@ -1,0 +1,97 @@
+/*
+ * ================================================================
+ * Element UI Tooltip 主题适配
+ * ================================================================
+ * 颜色令牌在本文件内按主题定义，默认覆盖 is-dark / is-light，
+ * 表格 show-overflow-tooltip 同样生效。
+ */
+
+:root,
+:root[data-theme='dark'] {
+  --c-tooltip-bg: #2a3350;
+  --c-tooltip-text: #eef2ff;
+  --c-tooltip-border: rgba(167, 139, 250, 0.28);
+  --c-tooltip-shadow: 0 10px 28px rgba(0, 0, 0, 0.42);
+}
+
+:root[data-theme='light'] {
+  --c-tooltip-bg: #ffffff;
+  --c-tooltip-text: #1f2230;
+  --c-tooltip-border: #e4e7eb;
+  --c-tooltip-shadow: 0 8px 24px rgba(31, 34, 48, 0.12);
+}
+
+.el-tooltip__popper.is-dark,
+.el-tooltip__popper.is-light,
+.el-tooltip__popper.ledger-tooltip {
+  max-width: 420px;
+  padding: 8px 12px;
+  color: var(--c-tooltip-text) !important;
+  background: var(--c-tooltip-bg) !important;
+  border: 1px solid var(--c-tooltip-border);
+  border-radius: var(--r-md);
+  box-shadow: var(--c-tooltip-shadow);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-normal);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* 等宽文本溢出提示：气泡字体与单元格 font-mono 保持一致 */
+.el-tooltip__popper.ledger-tooltip--mono {
+  font-family: var(--font-mono);
+}
+
+/* 多行 / 带标题的富文本 Tooltip */
+.el-tooltip__popper.ledger-tooltip--rich {
+  max-width: 360px;
+  padding: 10px 12px;
+}
+
+.ledger-tooltip__title {
+  margin-bottom: 6px;
+  color: var(--c-tooltip-text);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  line-height: 1.4;
+}
+
+.ledger-tooltip__line {
+  color: var(--c-tooltip-text);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+/* 箭头颜色与气泡背景保持一致 */
+.el-tooltip__popper[x-placement^='top'] .popper__arrow {
+  border-top-color: var(--c-tooltip-border) !important;
+}
+
+.el-tooltip__popper[x-placement^='top'] .popper__arrow::after {
+  border-top-color: var(--c-tooltip-bg) !important;
+}
+
+.el-tooltip__popper[x-placement^='bottom'] .popper__arrow {
+  border-bottom-color: var(--c-tooltip-border) !important;
+}
+
+.el-tooltip__popper[x-placement^='bottom'] .popper__arrow::after {
+  border-bottom-color: var(--c-tooltip-bg) !important;
+}
+
+.el-tooltip__popper[x-placement^='left'] .popper__arrow {
+  border-left-color: var(--c-tooltip-border) !important;
+}
+
+.el-tooltip__popper[x-placement^='left'] .popper__arrow::after {
+  border-left-color: var(--c-tooltip-bg) !important;
+}
+
+.el-tooltip__popper[x-placement^='right'] .popper__arrow {
+  border-right-color: var(--c-tooltip-border) !important;
+}
+
+.el-tooltip__popper[x-placement^='right'] .popper__arrow::after {
+  border-right-color: var(--c-tooltip-bg) !important;
+}

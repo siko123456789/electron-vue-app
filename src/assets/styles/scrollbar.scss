@@ -1,0 +1,63 @@
+/*
+ * 全局滚动条：细滑块，悬停仅略加深，颜色跟随深浅主题
+ * 注意：Chrome 同时写 scrollbar-color 时可能盖掉自定义伪元素并出现发黑悬停，
+ * 因此 scrollbar-color 仅给 Firefox 使用。
+ */
+
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--c-scrollbar-thumb) var(--c-scrollbar-track);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--c-scrollbar-thumb);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover,
+::-webkit-scrollbar-thumb:active {
+  background: var(--c-scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Element UI 自定义滚动条 */
+.el-scrollbar__bar {
+  right: 2px;
+  bottom: 2px;
+  opacity: 1;
+}
+
+.el-scrollbar__bar.is-vertical {
+  width: 4px !important;
+}
+
+.el-scrollbar__bar.is-horizontal {
+  height: 4px !important;
+}
+
+.el-scrollbar__thumb {
+  background-color: var(--c-scrollbar-thumb) !important;
+  border-radius: 999px;
+  opacity: 1 !important;
+}
+
+.el-scrollbar__bar:hover .el-scrollbar__thumb,
+.el-scrollbar__thumb:hover,
+.el-scrollbar__thumb:active {
+  background-color: var(--c-scrollbar-thumb-hover) !important;
+}

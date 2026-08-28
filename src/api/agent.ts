@@ -1,59 +1,10 @@
+/** Agent 与服务收敛治理接口 */
 import request from '@/utils/request'
 
-type ApiData = Record<string, any> | any[] | undefined
-type ApiParams = Record<string, any> | undefined
-
-export function agentInstallAPI(data?: ApiData) {
-  return request({
-    url: '/abutment/agent/agentInstall',
-    method: 'post',
-    data
-  })
-}
-
-export function agentNameIsAvailableAPI(params?: ApiParams) {
-  return request({
-    url: '/abutment/agent/queryAgentNameIsAvailable',
-    method: 'get',
-    params
-  })
-}
-
-export function groupList() {
-  return request({
-    url: '/abutment/agent/queryAgentGroup',
-    method: 'get'
-  })
-}
-
-export function createGroup(data?: ApiData) {
-  return request({
-    url: '/abutment/agent/createAgentGroup',
-    method: 'post',
-    data
-  })
-}
-
-export function queryAgentRule(params?: ApiParams) {
-  return request({
-    url: '/abutment/agent/queryAgentRule',
-    method: 'get',
-    params
-  })
-}
-
-export function batchAgentRule(data?: ApiData) {
-  return request({
-    url: '/abutment/agent/batchAgentRule',
-    method: 'post',
-    data
-  })
-}
-
-export function agentIsInstalled(data?: ApiData) {
-  return request({
-    url: '/abutment/agent/agentIsInstalled',
-    method: 'post',
-    data
-  })
-}
+export function agentIsInstalled(data: Record<string, unknown>) { return request.post('/abutment/agent/agentIsInstalled', data) }
+export function agentInstallAPI(data: Record<string, unknown>) { return request.post('/abutment/agent/agentInstall', data) }
+export function agentNameIsAvailableAPI(params: Record<string, unknown>) { return request.get('/abutment/agent/queryAgentNameIsAvailable', params) }
+export function groupList(params?: Record<string, unknown>) { return request.get('/abutment/agent/queryAgentGroup', params) }
+export function createGroup(data: Record<string, unknown>) { return request.post('/abutment/agent/createAgentGroup', data) }
+export function queryAgentRule(params?: Record<string, unknown>) { return request.get('/abutment/agent/queryAgentRule', params) }
+export function batchAgentRule(data: Record<string, unknown>) { return request.post('/abutment/agent/batchAddRuleById', data) }

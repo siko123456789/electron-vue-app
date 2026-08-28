@@ -1,19 +1,53 @@
 <template>
   <transition name="app-lock-fade">
     <div v-if="visible" class="lock-screen">
-      <!-- 动态氛围背景层 -->
-      <div class="bg-glow-1"></div>
-      <div class="bg-glow-2"></div>
+      <!-- 与登录页一致：可拖拽区 + 主题切换 + 窗口控件 -->
+      <div
+        v-if="framelessWindow"
+        class="lock-drag"
+        aria-hidden="true"
+        @dblclick="toggleMaximize"
+      />
+      <div v-if="framelessWindow" class="lock-chrome">
+        <button
+          class="lock-theme-toggle"
+          type="button"
+          :aria-label="themeToggleLabel"
+          :title="themeToggleLabel"
+          @click="settings.toggleColorTheme()"
+        >
+          <el-icon>
+            <Moon v-if="settings.colorTheme === 'dark'" />
+            <Sunny v-else />
+          </el-icon>
+        </button>
+        <WindowControls />
+      </div>
+      <button
+        v-else
+        class="lock-theme-toggle lock-theme-toggle--solo"
+        type="button"
+        :aria-label="themeToggleLabel"
+        :title="themeToggleLabel"
+        @click="settings.toggleColorTheme()"
+      >
+        <el-icon>
+          <Moon v-if="settings.colorTheme === 'dark'" />
+          <Sunny v-else />
+        </el-icon>
+      </button>
 
-      <!-- 增加 :class 绑定实现错误震动 -->
+      <div class="bg-glow-1" />
+      <div class="bg-glow-2" />
+
       <div class="lock-shell" :class="{ 'is-error-shake': shakeTrigger }">
         <div class="lock-emblem">
-          <div class="icon-pulse"></div>
+          <div class="icon-pulse" />
           <el-icon>
             <Lock />
           </el-icon>
         </div>
-        
+
         <div class="lock-title">应用已锁定</div>
         <div class="lock-desc">为了您的数据安全，请输入锁屏密码</div>
 
@@ -38,7 +72,6 @@
           </el-button>
         </el-form>
 
-        <!-- 错误信息：增加过渡动画 -->
         <transition name="error-fade">
           <div v-if="errorMessage" class="lock-error">
             <el-icon class="mr-1"><Warning /></el-icon>
@@ -53,7 +86,7 @@
           </el-button>
         </div>
 
-        <div class="lock-divider"></div>
+        <div class="lock-divider" />
         <div class="lock-tip">锁定期间页面内容已被安全隐藏</div>
       </div>
     </div>
@@ -61,12 +94,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, nextTick } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Lock, Moon, Sunny, Warning } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSettingsStore } from '@/stores/settings'
-import { Lock, Warning } from '@element-plus/icons-vue'
+import WindowControls from '@/components/WindowControls.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -76,11 +110,20 @@ const settings = useSettingsStore()
 const password = ref('')
 const submitting = ref(false)
 const errorMessage = ref('')
-const shakeTrigger = ref(false) // 控制震动动画
+const shakeTrigger = ref(false)
+const framelessWindow = ref(Boolean(window.ipcRenderer?.invoke))
 
 const visible = computed(() => {
   return Boolean(settings.isLocked && auth.isLoggedIn && route.meta?.requiresAuth !== false)
 })
+
+const themeToggleLabel = computed(() =>
+  settings.colorTheme === 'dark' ? '切换浅色模式' : '切换深色模式',
+)
+
+function toggleMaximize() {
+  void window.ipcRenderer?.invoke('window/maximize-toggle')
+}
 
 watch(visible, (next) => {
   if (!next) {
@@ -90,11 +133,22 @@ watch(visible, (next) => {
   }
 })
 
+onMounted(async () => {
+  if (!window.ipcRenderer?.invoke) {
+    framelessWindow.value = false
+    return
+  }
+  try {
+    framelessWindow.value = Boolean(await window.ipcRenderer.invoke('app/use-frameless-window'))
+  } catch {
+    framelessWindow.value = false
+  }
+})
+
 function clearError() {
   errorMessage.value = ''
 }
 
-// 触发震动效果
 function triggerShake() {
   shakeTrigger.value = true
   setTimeout(() => {
@@ -124,14 +178,14 @@ async function unlock() {
 
     settings.unlockApp()
     password.value = ''
-    ElMessage({ 
-      message: '解锁成功', 
-      type: 'success', 
+    ElMessage({
+      message: '解锁成功',
+      type: 'success',
       zIndex: 20000,
-      customClass: 'lock-message'
+      customClass: 'lock-message',
     })
-  } catch (error: any) {
-    errorMessage.value = error?.message || '解锁失败，请稍后再试'
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : '解锁失败，请稍后再试'
     triggerShake()
   } finally {
     submitting.value = false
@@ -141,7 +195,6 @@ async function unlock() {
 async function handleForgetPassword() {
   await nextTick()
   try {
-    
     await ElMessageBox.confirm(
       '忘记密码将退出登录，登录后可重新设置锁屏密码。确定要退出吗？',
       '安全提示',
@@ -150,8 +203,8 @@ async function handleForgetPassword() {
         cancelButtonText: '取消',
         type: 'warning',
         zIndex: 99999,
-        center: true
-      }
+        center: true,
+      },
     )
     settings.disableLock()
     auth.clearAuth()
@@ -171,20 +224,74 @@ async function handleForgetPassword() {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background-color: #f8fafc;
+  background-color: var(--c-bg);
   overflow: hidden;
 }
 
-/* 动态背景光晕 */
+.lock-drag {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1020;
+  height: 48px;
+  -webkit-app-region: drag;
+}
+
+.lock-chrome {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1030;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 36px;
+  -webkit-app-region: no-drag;
+}
+
+.lock-theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--c-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.lock-theme-toggle:hover {
+  color: var(--c-primary-light);
+  background: var(--c-bg-hover);
+}
+
+.lock-theme-toggle--solo {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 1030;
+}
+
+/* 动态背景光晕（跟主题主色） */
 .bg-glow-1 {
   position: absolute;
   top: -10%;
   left: -10%;
   width: 50%;
   height: 50%;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--c-primary) 22%, transparent) 0%,
+    transparent 70%
+  );
   filter: blur(60px);
   animation: float 20s infinite alternate;
+  pointer-events: none;
 }
 
 .bg-glow-2 {
@@ -193,14 +300,23 @@ async function handleForgetPassword() {
   right: -10%;
   width: 50%;
   height: 50%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--c-info) 16%, transparent) 0%,
+    transparent 70%
+  );
   filter: blur(60px);
   animation: float 25s infinite alternate-reverse;
+  pointer-events: none;
 }
 
 @keyframes float {
-  from { transform: translate(0, 0); }
-  to { transform: translate(10%, 10%); }
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(10%, 10%);
+  }
 }
 
 .lock-shell {
@@ -208,27 +324,39 @@ async function handleForgetPassword() {
   width: min(100%, 400px);
   padding: 48px 36px;
   border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid color-mix(in srgb, var(--c-border) 80%, transparent);
+  background: color-mix(in srgb, var(--c-bg-card) 78%, transparent);
+  backdrop-filter: blur(24px) saturate(160%);
   box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.05),
-    0 20px 40px -12px rgba(168, 85, 247, 0.15),
-    inset 0 0 20px rgba(255, 255, 255, 0.5);
+    0 4px 6px -1px color-mix(in srgb, #000 8%, transparent),
+    0 20px 40px -12px color-mix(in srgb, var(--c-primary) 22%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 12%, transparent);
   text-align: center;
   z-index: 10;
 }
 
-/* 震动动画 */
 .is-error-shake {
-  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 @keyframes shake {
-  10%, 90% { transform: translate3d(-1px, 0, 0); }
-  20%, 80% { transform: translate3d(2px, 0, 0); }
-  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-  40%, 60% { transform: translate3d(4px, 0, 0); }
+  10%,
+  90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+  20%,
+  80% {
+    transform: translate3d(2px, 0, 0);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+  40%,
+  60% {
+    transform: translate3d(4px, 0, 0);
+  }
 }
 
 .lock-emblem {
@@ -240,36 +368,47 @@ async function handleForgetPassword() {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--c-text-on-primary);
   font-size: 38px;
-  background: linear-gradient(135deg, #a855f7, #7c3aed);
-  box-shadow: 0 12px 24px rgba(124, 58, 237, 0.3);
+  background: linear-gradient(135deg, var(--c-primary-light), var(--c-primary));
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--c-primary) 35%, transparent);
   animation: hoverFloat 3s ease-in-out infinite;
 }
 
 @keyframes hoverFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 .icon-pulse {
   position: absolute;
   inset: -4px;
   border-radius: 30px;
-  background: rgba(168, 85, 247, 0.2);
+  background: color-mix(in srgb, var(--c-primary) 22%, transparent);
   z-index: -1;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(1.3); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
 }
 
 .lock-title {
   font-size: 26px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--c-text);
   letter-spacing: -0.02em;
 }
 
@@ -277,7 +416,7 @@ async function handleForgetPassword() {
   margin-top: 12px;
   font-size: 15px;
   line-height: 1.6;
-  color: #64748b;
+  color: var(--c-text-muted);
 }
 
 .lock-form {
@@ -289,7 +428,12 @@ async function handleForgetPassword() {
 .unlock-btn {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(90deg, #a855f7, #7c3aed, #a855f7) !important;
+  background: linear-gradient(
+    90deg,
+    var(--c-primary-light),
+    var(--c-primary),
+    var(--c-primary-light)
+  ) !important;
   background-size: 200% auto !important;
   border: none !important;
   height: 52px;
@@ -302,7 +446,7 @@ async function handleForgetPassword() {
 .unlock-btn:hover {
   background-position: right center !important;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 8px 25px color-mix(in srgb, var(--c-primary) 42%, transparent);
 }
 
 .unlock-btn:active {
@@ -316,16 +460,18 @@ async function handleForgetPassword() {
   justify-content: center;
   font-size: 13px;
   font-weight: 600;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.08);
+  color: var(--c-danger);
+  background: var(--c-danger-bg);
   padding: 8px;
   border-radius: 8px;
 }
 
-.error-fade-enter-active, .error-fade-leave-active {
+.error-fade-enter-active,
+.error-fade-leave-active {
   transition: all 0.3s ease;
 }
-.error-fade-enter-from, .error-fade-leave-to {
+.error-fade-enter-from,
+.error-fade-leave-to {
   opacity: 0;
   transform: translateY(-10px);
 }
@@ -340,7 +486,7 @@ async function handleForgetPassword() {
 }
 
 .forget-text {
-  color: #94a3b8;
+  color: var(--c-text-muted);
 }
 
 .forget-link {
@@ -352,32 +498,34 @@ async function handleForgetPassword() {
   margin: 24px auto 16px;
   width: 40px;
   height: 3px;
-  background: rgba(168, 85, 247, 0.1);
+  background: color-mix(in srgb, var(--c-primary) 16%, transparent);
   border-radius: 2px;
 }
 
 .lock-tip {
   font-size: 12px;
-  color: #cbd5e1;
-  text-transform: uppercase;
+  color: var(--c-text-muted);
   letter-spacing: 0.05em;
+  opacity: 0.75;
 }
 
-/* 输入框深度定制 */
 :deep(.el-input__wrapper) {
-  background: rgba(255, 255, 255, 0.5);
+  background: color-mix(in srgb, var(--c-bg-input) 70%, transparent);
   border-radius: 14px;
   padding: 0 16px;
-  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.1) inset !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c-primary) 16%, transparent) inset !important;
   transition: all 0.3s;
 }
 
 :deep(.el-input__wrapper.is-focus) {
-  background: #fff;
-  box-shadow: 0 0 0 2px #a855f7 inset !important;
+  background: var(--c-bg-input);
+  box-shadow: 0 0 0 2px var(--c-primary) inset !important;
 }
 
-/* 页面切换动画 */
+:deep(.el-input__inner) {
+  color: var(--c-text);
+}
+
 .app-lock-fade-enter-active,
 .app-lock-fade-leave-active {
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -386,9 +534,11 @@ async function handleForgetPassword() {
 .app-lock-fade-enter-from,
 .app-lock-fade-leave-to {
   opacity: 0;
-  backdrop-filter: blur(0px);
+  backdrop-filter: blur(0);
   transform: scale(1.1);
 }
 
-.mr-1 { margin-right: 4px; }
+.mr-1 {
+  margin-right: 4px;
+}
 </style>

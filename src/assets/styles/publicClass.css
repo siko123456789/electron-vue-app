@@ -78,6 +78,20 @@
   --el-menu-active-bg-color: var(--app-purple-soft);
 }
 
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --app-purple-soft: rgba(152, 16, 250, 0.15);
+  --app-bg: #0c1220;
+  --app-surface: #131a2c;
+  --app-border: rgba(124, 58, 237, 0.18);
+  --app-text: #eef2ff;
+  --app-muted: #9499b0;
+  --app-muted-bg: #1a2238;
+  --app-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  --app-info: #9499b0;
+}
+
 html,
 body,
 #app {
@@ -88,8 +102,7 @@ body {
   margin: 0;
   color: var(--app-text);
   background: var(--app-bg);
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei',
-    sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -120,6 +133,6 @@ body {
   color: var(--app-muted);
 }
 .el-dropdown-menu__item:hover {
-  background-color: var(--app-purple-soft);
-  color: var(--app-purple);
+  background-color: var(--c-primary-bg);
+  color: var(--c-primary);
 }

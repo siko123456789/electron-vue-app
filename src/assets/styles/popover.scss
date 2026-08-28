@@ -1,0 +1,123 @@
+/*
+ * ================================================================
+ * Element UI Popover 主题适配
+ * ================================================================
+ */
+
+.el-popover.el-popper {
+  min-width: 120px;
+  padding: 10px 12px;
+  color: var(--c-text-secondary);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md, 0 8px 24px rgba(0, 0, 0, 0.28));
+}
+
+.el-popover__title {
+  margin-bottom: 8px;
+  color: var(--c-text);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  line-height: 1.4;
+}
+
+.el-popover.el-popper[x-placement^='top'] .popper__arrow {
+  border-top-color: var(--c-border);
+}
+
+.el-popover.el-popper[x-placement^='top'] .popper__arrow::after {
+  border-top-color: var(--c-bg-card);
+}
+
+.el-popover.el-popper[x-placement^='bottom'] .popper__arrow {
+  border-bottom-color: var(--c-border);
+}
+
+.el-popover.el-popper[x-placement^='bottom'] .popper__arrow::after {
+  border-bottom-color: var(--c-bg-card);
+}
+
+.el-popover.el-popper[x-placement^='left'] .popper__arrow {
+  border-left-color: var(--c-border);
+}
+
+.el-popover.el-popper[x-placement^='left'] .popper__arrow::after {
+  border-left-color: var(--c-bg-card);
+}
+
+.el-popover.el-popper[x-placement^='right'] .popper__arrow {
+  border-right-color: var(--c-border);
+}
+
+.el-popover.el-popper[x-placement^='right'] .popper__arrow::after {
+  border-right-color: var(--c-bg-card);
+}
+
+/* 资产凭证 - 生成密码气泡：与顶栏/页面背景拉开层次 */
+.el-popover.el-popper.ledger-password-popover {
+  min-width: 240px;
+  padding: 12px 14px;
+  background: var(--c-bg-hover);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xl);
+}
+
+.el-popover.el-popper.ledger-password-popover[x-placement^='top'] .popper__arrow {
+  border-top-color: var(--c-border-strong);
+}
+
+.el-popover.el-popper.ledger-password-popover[x-placement^='top'] .popper__arrow::after {
+  border-top-color: var(--c-bg-hover);
+}
+
+.el-popover.el-popper.ledger-password-popover[x-placement^='bottom'] .popper__arrow {
+  border-bottom-color: var(--c-border-strong);
+}
+
+.el-popover.el-popper.ledger-password-popover[x-placement^='bottom'] .popper__arrow::after {
+  border-bottom-color: var(--c-bg-hover);
+}
+
+.ledger-password-popover {
+  .password-popover {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    word-break: break-all;
+    color: var(--c-text);
+    background: var(--c-bg-input);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+
+    span {
+      flex: 1;
+      min-width: 0;
+      color: var(--c-text);
+      font-family: Consolas, Monaco, monospace;
+      font-size: var(--fs-sm);
+      line-height: 1.5;
+    }
+
+    .password-popover__actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .password-popover__icon {
+      color: var(--c-text-secondary);
+      cursor: pointer;
+      font-size: 16px;
+      transition: color 0.15s ease;
+
+      &:hover {
+        color: var(--c-primary);
+      }
+    }
+  }
+}

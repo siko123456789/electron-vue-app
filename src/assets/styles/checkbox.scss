@@ -1,0 +1,117 @@
+/*
+ * ================================================================
+ * Element UI 复选框覆盖规范
+ * ================================================================
+ * 将 Element UI 写死的默认蓝色统一映射到项目主题主色。
+ */
+
+.el-checkbox {
+  color: var(--c-text-secondary);
+}
+
+.el-checkbox__label {
+  color: inherit;
+}
+
+.el-checkbox__inner {
+  background: var(--c-bg-input);
+  border-color: var(--c-border-strong);
+}
+
+.el-checkbox__inner:hover,
+.el-checkbox__input.is-focus .el-checkbox__inner {
+  border-color: var(--c-primary);
+}
+
+.el-checkbox__input.is-checked .el-checkbox__inner,
+.el-checkbox__input.is-indeterminate .el-checkbox__inner {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: var(--c-primary-light);
+}
+
+.el-checkbox.is-bordered.is-checked {
+  border-color: var(--c-primary);
+}
+
+.el-checkbox-button__inner {
+  color: var(--c-text-secondary);
+  background: var(--c-bg-card);
+  border-color: var(--c-border);
+}
+
+.el-checkbox-button__inner:hover,
+.el-checkbox-button.is-focus .el-checkbox-button__inner {
+  color: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+.el-checkbox-button.is-checked .el-checkbox-button__inner {
+  color: var(--c-text-on-primary);
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  box-shadow: -1px 0 0 0 var(--c-primary-light);
+}
+
+.el-checkbox-button.is-checked:first-child .el-checkbox-button__inner {
+  border-left-color: var(--c-primary);
+}
+
+/* Element UI 开关：与 Checkbox 共用选择类控件主题规范 */
+.el-switch {
+  color: var(--c-text-secondary);
+}
+
+.el-switch__core {
+  height: 20px;
+  border-color: var(--c-border-strong);
+  border-radius: 10px;
+  background-color: var(--c-bg-hover);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.el-switch__core::after {
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background-color: var(--c-text-muted);
+  box-shadow: var(--shadow-sm);
+}
+
+.el-switch:hover .el-switch__core,
+.el-switch:focus-visible .el-switch__core {
+  border-color: var(--c-primary-light);
+}
+
+.el-switch.is-checked .el-switch__core {
+  border-color: var(--c-primary);
+  background-color: var(--c-primary);
+}
+
+.el-switch.is-checked .el-switch__core::after {
+  left: 100%;
+  margin-left: -16px;
+  background-color: var(--c-text-on-primary);
+}
+
+.el-switch__label {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-base);
+}
+
+.el-switch__label.is-active {
+  color: var(--c-primary-light);
+}
+
+.el-switch.is-disabled {
+  opacity: 0.5;
+}
+
+.el-switch.is-disabled .el-switch__core,
+.el-switch.is-disabled .el-switch__label {
+  cursor: not-allowed;
+}

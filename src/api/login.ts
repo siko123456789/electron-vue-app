@@ -9,6 +9,3 @@ export function logout(params?: Record<string, any>) {
   // request.ts 已配置 baseURL = '/api'，这里不要再手写 '/api'
   return request.get('/user/logout', params)
 }
-export function getIntegrationAPI(params?: Record<string, any>) {
-  return request.get('/config/get_integration', params)
-}

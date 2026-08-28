@@ -1,0 +1,215 @@
+/* Element UI MessageBox / 删除确认弹窗统一规范。 */
+.el-message-box {
+  width: 460px;
+  max-width: calc(100vw - 32px);
+  padding-bottom: 0;
+  overflow: hidden;
+  color: var(--c-text);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-xl);
+}
+
+.el-message-box__header {
+  position: relative;
+  padding: var(--sp-4) 56px var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.el-message-box__title {
+  color: var(--c-text);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold); /* 弹窗标题：600 */
+  line-height: 22px;
+}
+
+.el-message-box__headerbtn {
+  top: var(--sp-4);
+  right: var(--sp-5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--c-text-muted);
+  background: var(--c-bg-hover);
+  border-radius: var(--r-md);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.el-message-box__headerbtn:hover,
+.el-message-box__headerbtn:focus {
+  color: var(--c-primary);
+  background: var(--c-primary-bg);
+  outline: none;
+}
+
+.el-message-box__headerbtn .el-message-box__close,
+.el-message-box__headerbtn:focus .el-message-box__close,
+.el-message-box__headerbtn:hover .el-message-box__close {
+  color: inherit;
+}
+
+.el-message-box__content {
+  padding: var(--sp-5);
+  color: var(--c-text-secondary);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-normal);
+}
+
+.el-message-box__status {
+  font-size: 22px !important;
+}
+
+.el-message-box__status.el-icon-warning {
+  color: var(--c-warn);
+}
+
+.el-message-box__message {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-normal);
+  line-height: 1.6;
+}
+
+.el-message-box__message p {
+  margin: 0;
+}
+
+.el-message-box__btns {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--c-bg-card);
+  border-top: 1px solid var(--c-border);
+}
+
+.el-message-box__btns .el-button + .el-button {
+  margin-left: 0;
+}
+
+/* MessageBox 默认生成 small 按钮，这里与普通弹窗底部按钮保持一致。 */
+.el-message-box__btns .el-button {
+  min-width: 64px;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 7px 16px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+}
+
+.v-modal {
+  background: var(--c-modal-mask);
+  opacity: 1;
+}
+
+/* 删除确认正文。 */
+.delete-confirm-dialog__desc {
+  color: var(--c-text-secondary);
+}
+
+.delete-confirm-dialog__confirm-box {
+  margin-top: 16px;
+  padding: 14px 16px;
+  color: var(--c-danger);
+  background: var(--c-danger-bg);
+  border: 1px solid var(--c-danger-bg);
+  border-left: 4px solid var(--c-danger);
+  border-radius: var(--r-lg);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.delete-confirm-dialog__confirm-box--checked {
+  border-color: var(--c-danger);
+}
+
+.delete-confirm-dialog__label {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  color: var(--c-danger);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-checkbox-input--hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.custom-checkbox-icon {
+  position: relative;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  background: var(--c-bg-card);
+  border: 2px solid var(--c-danger);
+  border-radius: 5px;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.custom-checkbox-input:focus + .custom-checkbox-icon {
+  box-shadow: 0 0 0 3px var(--c-danger-bg);
+}
+
+.custom-checkbox-input:checked + .custom-checkbox-icon {
+  background: var(--c-danger);
+}
+
+.custom-checkbox-input:checked + .custom-checkbox-icon::after {
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--c-text-on-primary);
+  border-width: 0 2px 2px 0;
+  content: '';
+  transform: rotate(45deg);
+}
+
+/* 未勾选时确认按钮保持不可操作，勾选后切换为危险操作色。 */
+.delete-confirm-dialog .el-message-box__btns .el-button--primary {
+  color: var(--c-text-muted);
+  background: var(--c-bg-hover);
+  border-color: var(--c-border);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.delete-confirm-dialog--confirm-active
+  .el-message-box__btns
+  .el-button--primary {
+  color: var(--c-text-on-primary);
+  background: var(--c-danger);
+  border-color: var(--c-danger);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.delete-confirm-dialog--confirm-active
+  .el-message-box__btns
+  .el-button--primary:hover {
+  filter: brightness(1.06);
+}
+
+@media (max-width: 520px) {
+  .el-message-box__header,
+  .el-message-box__content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .el-message-box__btns {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+}

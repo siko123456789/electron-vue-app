@@ -1,7 +1,13 @@
 import type { BrowserWindow } from 'electron'
-import { screen,nativeImage } from 'electron'
+import { screen, nativeImage } from 'electron'
 import * as path from 'node:path'
 import { getAppIconPathForWindow } from '../main'
+
+/**
+ * 无边框窗口：Topbar 拖动移动，双击放大/还原（无自绘窗口按钮）
+ * 改 false 可恢复系统默认标题栏
+ */
+const USE_FRAMELESS_WINDOW = true
 
 export type WindowManagerDeps = {
   startedFromAutoStart: boolean
@@ -10,6 +16,7 @@ export type WindowManagerDeps = {
   VITE_DEV_SERVER_URL?: string
   appRoot: string
   onReadyToShow?: () => void
+  onMainWindowShown?: () => void
 }
 
 // 窗口状态管理器类型（从 electron-window-state 导入）
@@ -22,6 +29,10 @@ export type WindowState = {
   manage: (win: BrowserWindow) => void
 }
 
+function useFramelessWindow() {
+  return USE_FRAMELESS_WINDOW && process.platform === 'win32'
+}
+
 /**
  * 主窗口管理
  * - 负责创建/显示/隐藏主窗口
@@ -31,6 +42,7 @@ export type WindowState = {
 export function createWindowManager(deps: WindowManagerDeps) {
   let win: BrowserWindow | null = null
   let isQuitting = false
+  let pinnedOnTop = false
   let currentWindowState: WindowState | undefined
 
   function persistWindowState() {
@@ -53,7 +65,15 @@ export function createWindowManager(deps: WindowManagerDeps) {
   function showMainWindow() {
     if (!win) return
     win.show()
+    if (pinnedOnTop) {
+      applyAlwaysOnTop(true)
+    }
     win.focus()
+    try {
+      deps.onMainWindowShown?.()
+    } catch {
+      // ignore
+    }
   }
 
   function hideMainWindow() {
@@ -68,6 +88,73 @@ export function createWindowManager(deps: WindowManagerDeps) {
     else showMainWindow()
   }
 
+  function minimizeWindow() {
+    win?.minimize()
+  }
+
+  function toggleMaximizeWindow() {
+    if (!win) return false
+    if (win.isMaximized()) win.unmaximize()
+    else win.maximize()
+    return win.isMaximized()
+  }
+
+  function isWindowMaximized() {
+    return win?.isMaximized() ?? false
+  }
+
+  function closeWindowFromChrome() {
+    win?.close()
+  }
+
+  function applyAlwaysOnTop(enabled: boolean) {
+    if (!win) return false
+
+    const on = Boolean(enabled)
+
+    if (!on) {
+      win.setAlwaysOnTop(false)
+      pinnedOnTop = false
+      return win.isAlwaysOnTop()
+    }
+
+    if (process.platform === 'win32') {
+      const levels = ['screen-saver', 'pop-up-menu', 'floating'] as const
+      for (const level of levels) {
+        try {
+          win.setAlwaysOnTop(true, level)
+          break
+        } catch {
+          // try next level
+        }
+      }
+    } else {
+      win.setAlwaysOnTop(true)
+    }
+
+    if (win.isVisible()) {
+      win.show()
+      win.moveTop()
+      win.focus()
+    }
+
+    pinnedOnTop = win.isAlwaysOnTop()
+    return pinnedOnTop
+  }
+
+  function toggleAlwaysOnTop() {
+    if (!win) return false
+    return applyAlwaysOnTop(!win.isAlwaysOnTop())
+  }
+
+  function isAlwaysOnTop() {
+    return win?.isAlwaysOnTop() ?? false
+  }
+
+  function notifyMaximizeChanged() {
+    win?.webContents.send('window/maximize-changed', win.isMaximized())
+  }
+
   /**
    * 创建主窗口
    * @param BrowserWindowCtor BrowserWindow 构造函数
@@ -79,7 +166,6 @@ export function createWindowManager(deps: WindowManagerDeps) {
   ) {
     currentWindowState = winState
 
-    // 如果有 winState，使用记忆的位置和大小，否则使用默认值
     const bounds = winState ? {
       x: winState.x,
       y: winState.y,
@@ -89,46 +175,51 @@ export function createWindowManager(deps: WindowManagerDeps) {
     const hasPosition = Number.isInteger(bounds?.x) && Number.isInteger(bounds?.y)
 
     const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize
-    const minWidth = 800
-    const minHeight = 600
+    const minWidth = 1000
+    const minHeight = 800
     const defaultWidth = Math.max(minWidth, Math.floor(screenWidth * 0.7))
     const defaultHeight = Math.max(minHeight, Math.floor(screenHeight * 0.78))
 
-    // 优先使用记忆中的窗口大小；首次启动时使用一套基础默认尺寸
     const windowWidth = bounds?.width || defaultWidth
     const windowHeight = bounds?.height || defaultHeight
 
     win = new BrowserWindowCtor({
-      x: hasPosition ? bounds?.x : undefined,  // 使用记忆的 X 坐标
-      y: hasPosition ? bounds?.y : undefined,  // 使用记忆的 Y 坐标
+      x: hasPosition ? bounds?.x : undefined,
+      y: hasPosition ? bounds?.y : undefined,
       width: windowWidth,
       height: windowHeight,
       minWidth,
       minHeight,
-      center: !hasPosition,  // 如果有位置参数就不居中，否则居中
+      center: !hasPosition,
       resizable: true,
       autoHideMenuBar: true,
       show: !deps.startedFromAutoStart,
-      // Use the same icon resolution logic as tray/icon (works for both dev and packaged builds).
+      title: '',
+      ...(useFramelessWindow() ? { frame: false } : {}),
       icon: nativeImage.createFromPath(getAppIconPathForWindow()),
       webPreferences: {
         preload: path.join(deps.MAIN_DIST, 'preload.mjs'),
       }
     })
 
-    // 如果有 winState，让它接管窗口（监听 move 和 resize 事件，自动保存状态）
-    // 必须在窗口创建后立即调用，在设置其他事件监听器之前
+    win.on('page-title-updated', (event) => {
+      event.preventDefault()
+      win?.setTitle('')
+    })
+
     if (winState && win) {
       winState.manage(win)
     }
 
     win.on('close', (event) => {
       if (isQuitting) return
-      // 关闭主窗口时，改为托盘常驻（不退出）
       persistWindowState()
       event.preventDefault()
       win?.hide()
     })
+
+    win.on('maximize', notifyMaximizeChanged)
+    win.on('unmaximize', notifyMaximizeChanged)
 
     win.on('ready-to-show', () => {
       if (deps.startedFromAutoStart) win?.hide()
@@ -137,19 +228,21 @@ export function createWindowManager(deps: WindowManagerDeps) {
 
     if (deps.VITE_DEV_SERVER_URL) {
       win.loadURL(deps.VITE_DEV_SERVER_URL)
-      win.webContents.openDevTools()
     } else {
       win.loadFile(path.join(deps.RENDERER_DIST, 'index.html'))
     }
 
     win.webContents.on('before-input-event', (_event, input) => {
       if (input.key === 'F12') {
-        win?.webContents.toggleDevTools()
+        if (win?.webContents.isDevToolsOpened()) {
+          win.webContents.closeDevTools()
+        } else {
+          win.webContents.openDevTools({ mode: 'right', activate: true })
+        }
       }
     })
   }
 
-  // window-all-closed：托盘常驻策略下不退出，只清引用
   function onAllWindowsClosed() {
     currentWindowState = undefined
     win = null
@@ -163,5 +256,12 @@ export function createWindowManager(deps: WindowManagerDeps) {
     toggleMainWindow,
     createWindow,
     onAllWindowsClosed,
+    minimizeWindow,
+    toggleMaximizeWindow,
+    isWindowMaximized,
+    closeWindowFromChrome,
+    useFramelessWindow,
+    toggleAlwaysOnTop,
+    isAlwaysOnTop,
   }
 }

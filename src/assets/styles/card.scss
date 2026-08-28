@@ -1,0 +1,25 @@
+/*
+ * ================================================================
+ * Element UI Card 主题适配
+ * ================================================================
+ */
+
+.el-card {
+  color: var(--c-text-secondary);
+  background-color: var(--c-bg-card);
+  border-color: var(--c-border);
+  border-radius: var(--r-lg);
+}
+
+.el-card__header {
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--c-text);
+  background-color: var(--c-bg-card);
+  border-bottom-color: var(--c-border-light);
+}
+
+.el-card__body {
+  padding: var(--sp-4);
+  color: var(--c-text-secondary);
+  background-color: var(--c-bg-card);
+}

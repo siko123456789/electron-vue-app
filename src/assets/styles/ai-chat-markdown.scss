@@ -1,0 +1,13 @@
+@mixin ai-chat-markdown-content {
+  color: var(--c-text, #303133);
+  font-size: 14px;
+  line-height: 1.8;
+
+  :deep(h1), :deep(h2), :deep(h3), :deep(h4) { margin: 14px 0 8px; color: var(--c-text, #303133); }
+  :deep(p) { margin: 7px 0; }
+  :deep(ul), :deep(ol) { padding-left: 24px; }
+  :deep(code) { padding: 2px 5px; border-radius: 4px; background: var(--c-bg, #f3f4f6); }
+  :deep(pre) { overflow: auto; padding: 12px; border-radius: 8px; background: var(--c-bg, #f3f4f6); }
+  :deep(table) { width: 100%; border-collapse: collapse; }
+  :deep(th), :deep(td) { padding: 6px 8px; border: 1px solid var(--c-border, #dcdfe6); text-align: left; }
+}

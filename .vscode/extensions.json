@@ -2,5 +2,9 @@
   "recommendations": [
     "Vue.volar",
     "openai.chatgpt"
+  ],
+  "unwantedRecommendations": [
+    "octref.vetur",
+    "yoyo930021.vuter"
   ]
 }

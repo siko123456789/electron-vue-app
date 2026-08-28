@@ -1,0 +1,572 @@
+/*
+ * ================================================================
+ * 全局设计令牌
+ * ================================================================
+ * 公共组件统一使用 --c-* 变量；自包含页面可使用 --bg / --ink 体系。
+ * 两套令牌只保持颜色对应，命名不同，同一个页面中禁止混用。
+ * 所有组件禁止硬编码主题色。
+ * 暗色为默认主题；浅色由 html[data-theme='light'] 覆盖。
+ */
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* ---------- 01. 品牌与语义色 ---------- */
+  --c-danger: #f87171; /* 紧急 / 严重 / 关键漏洞 */
+  --c-danger-bg: rgba(248, 113, 113, 0.15);
+  --c-warn: #fbbf24; /* 高危 / 警告 / 待处理 */
+  --c-warn-bg: rgba(251, 191, 36, 0.15);
+  --c-info: #2563eb; /* 中危 / 信息 / 跟踪 */
+  --c-info-bg: rgba(37, 99, 235, 0.15);
+  --c-success: #34d399; /* 安全 / 成功 / 已修复 */
+  --c-success-bg: rgba(52, 211, 153, 0.15);
+  --c-neutral: #9499b0; /* 低危 / 常规 / 禁用 */
+  --c-neutral-bg: rgba(148, 153, 176, 0.15);
+  --c-primary: #7c3aed; /* 品牌主色 / 主操作 */
+  --c-primary-light: #a78bfa;
+  --c-primary-strong: #6d28d9;
+  --c-primary-bg: rgba(124, 58, 237, 0.15);
+
+  /* ---------- 02. 页面与容器背景 ---------- */
+  --c-bg: #0c1220; /* 页面背景 */
+  --c-bg-card: #131a2c; /* 卡片 / 弹窗背景 */
+  --c-bg-hover: #1a2238; /* 悬停 / 表头背景 */
+  --c-bg-input: #0f1626; /* 输入框背景 */
+  --c-table-head: #1a2238;
+  --shell-bg: var(--c-bg-hover); /* 侧栏 + 顶栏统一背景 */
+
+  /* ---------- 03. 文字颜色 ---------- */
+  --c-text: #eef2ff; /* 主要文字 */
+  --c-text-secondary: #d1d6e8; /* 次要文字 */
+  --c-text-muted: #9499b0; /* 辅助 / 标签文字 */
+  --c-text-on-primary: #ffffff;
+
+  /* ---------- 03.1 系统默认标签 ---------- */
+  --c-system-default-tag-color: var(--c-text);
+  --c-system-default-tag-border: rgba(238, 242, 255, 0.36);
+  --c-system-default-tag-bg: transparent;
+
+  /* ---------- 04. 边框与分割线 ---------- */
+  --c-border: rgba(124, 58, 237, 0.18); /* 标准边框 */
+  --c-border-light: rgba(124, 58, 237, 0.08); /* 浅色分割线 */
+  --c-border-strong: rgba(124, 58, 237, 0.3); /* 强调边框 */
+  --c-modal-mask: rgba(2, 6, 18, 0.72); /* 弹窗遮罩 */
+  --c-loading-mask: rgba(12, 18, 32, 0.78); /* Loading 遮罩 */
+  --c-scrollbar-thumb: rgba(148, 153, 176, 0.28); /* 滚动条滑块 */
+  --c-scrollbar-thumb-hover: rgba(148, 153, 176, 0.48); /* 悬停略深一档 */
+  --c-scrollbar-track: transparent; /* 滚动条轨道 */
+
+  /* ---------- 05. 导航组件状态 ---------- */
+  --c-nav-active-bg: rgba(253, 244, 255, 0.96);
+  --c-nav-active-border: transparent;
+  --c-nav-active-text: #7c3aed;
+
+  /* ---------- 06. 页面级令牌（自包含页面专用） ---------- */
+  --bg: #0c1220; /* 页面主背景 */
+  --bg2: #131a2c; /* 卡片 / 面板背景 */
+  --bg3: #1a2238; /* 次级背景 / 输入框 */
+  --surface: rgba(124, 58, 237, 0.1); /* 表面高亮 */
+  --rule: rgba(124, 58, 237, 0.18); /* 边框 / 分割线 */
+  --ink: #eef2ff; /* 主要文字 */
+  --ink2: #d1d6e8; /* 次要文字 */
+  --muted: #9499b0; /* 辅助文字 */
+  --accent: #7c3aed; /* 主色调 */
+  --accent2: #a78bfa; /* 辅助色调（链接 / 强调） */
+  --accent3: #7c3aed; /* 渐变起始色 */
+  --accent4: #6d28d9; /* 渐变结束色 */
+  --glow: rgba(124, 58, 237, 0.25); /* 光晕效果 */
+  --danger: #f87171; /* 危险 / 紧急 */
+  --danger-soft: rgba(248, 113, 113, 0.15); /* 危险背景 */
+  --warn: #fbbf24; /* 警告 / 高危 */
+  --warn-soft: rgba(251, 191, 36, 0.15); /* 警告背景 */
+  --success: #34d399; /* 成功 / 安全 */
+  --success-soft: rgba(52, 211, 153, 0.15); /* 成功背景 */
+  --info: #2563eb; /* 信息 / 中危 */
+  --info-soft: rgba(37, 99, 235, 0.15); /* 信息背景 */
+
+  /* ---------- 07. 风险运营中心页面 ---------- */
+  --risk-ops-header-bg: linear-gradient(
+    110deg,
+    rgba(124, 58, 237, 0.16) 0%,
+    rgba(59, 130, 246, 0.04) 100%
+  );
+  --risk-ops-govern-bg: linear-gradient(135deg, var(--danger) 0%, #9a3412 100%);
+  --risk-ops-security-bg: linear-gradient(
+    135deg,
+    rgba(234, 88, 12, 0.1) 0%,
+    rgba(167, 139, 250, 0.05) 100%
+  );
+  --risk-ops-security-border: rgba(234, 88, 12, 0.28);
+
+  /* ---------- 08. AI 智能助手 ---------- */
+  --risk-ops-ai-chat-bg: rgba(255, 255, 255, 0.02);
+  --risk-ops-ai-user-bubble-bg: #1a2238;
+  --risk-ops-ai-user-avatar-bg: #2563eb;
+  --risk-ops-ai-assistant-bubble-bg: var(--bg2);
+  --risk-ops-ai-assistant-bubble-border: var(--rule);
+  --risk-ops-ai-tag-hover-bg: rgba(124, 58, 237, 0.1);
+  --risk-ops-ai-feature-bg: var(--bg3);
+  --risk-ops-ai-feature-border: var(--rule);
+  --risk-ops-ai-feature-hover-bg: var(--surface);
+  --risk-ops-ai-input-bg: var(--bg3);
+  --risk-ops-ai-footer-bg: rgba(255, 255, 255, 0.03);
+  --risk-ops-ai-input-border: var(--rule);
+  --risk-ops-ai-tag-bg: transparent;
+  --risk-ops-ai-tag-danger-color: #f87171;
+  --risk-ops-ai-tag-danger-border: rgba(248, 113, 113, 0.45);
+  --risk-ops-ai-tag-warn-color: #fbbf24;
+  --risk-ops-ai-tag-warn-border: rgba(251, 191, 36, 0.45);
+
+  /* ---------- 09. 攻击面拓扑图 ---------- */
+  --attack-topo-line: rgba(255, 255, 255, 0.08);
+  --attack-topo-flow-start: rgba(59, 130, 246, 0);
+  --attack-topo-flow-warm: rgba(96, 165, 250, 0.42);
+  --attack-topo-flow-core: rgba(255, 255, 255, 0.82);
+  --attack-topo-flow-bright: rgba(167, 139, 250, 0.78);
+  --attack-topo-flow-end: rgba(168, 85, 247, 0);
+  --attack-topo-particle: #a78bfa;
+  --attack-topo-particle-bright: #c4b5fd;
+  --attack-topo-particle-head: #ede9fe;
+  --attack-topo-particle-tail: rgba(167, 139, 250, 0);
+  --attack-topo-canvas-bg: #0f1626;
+  --attack-topo-canvas-accent: radial-gradient(
+    ellipse at 26% 48%,
+    rgba(124, 58, 237, 0.14) 0%,
+    transparent 58%
+  );
+  --attack-topo-canvas-border: rgba(124, 58, 237, 0.12);
+  --draw-topo-grid-line: rgba(167, 139, 250, 0.28);
+  --draw-topo-grid-stripe: rgba(167, 139, 250, 0.16);
+  --draw-topo-tool-bg: rgba(124, 58, 237, 0.14);
+  --draw-topo-tool-border: rgba(167, 139, 250, 0.32);
+  --draw-topo-tool-icon-filter: brightness(0) invert(1) opacity(0.92);
+  --draw-topo-label-color: #eef2ff;
+  --draw-topo-text-color: #eef2ff;
+  --draw-topo-text-block-bg: #1a2238;
+  --draw-topo-text-block-border: rgba(124, 58, 237, 0.32);
+  --draw-topo-shape-label-color: #eef2ff;
+  --draw-topo-port-fill: #1a2238;
+  --draw-topo-port-stroke: #a78bfa;
+  --draw-topo-edge-color: #7a4fdb;
+  --attack-topo-card-bg: rgba(19, 26, 44, 0.92);
+  --attack-topo-card-border: rgba(124, 58, 237, 0.2);
+  --attack-topo-card-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  --attack-topo-card-header-bg: rgba(124, 58, 237, 0.1);
+  --attack-topo-card-inner-border: rgba(255, 255, 255, 0.06);
+  --attack-topo-internet-color: #7cb0e8;
+  --attack-topo-internet-bg: linear-gradient(
+    155deg,
+    rgba(59, 130, 246, 0.14) 0%,
+    rgba(26, 34, 56, 0.98) 58%
+  );
+  --attack-topo-internet-border: rgba(96, 165, 250, 0.3);
+  --attack-topo-internet-ring: rgba(96, 165, 250, 0.18);
+  --attack-topo-internet-glow: rgba(59, 130, 246, 0.14);
+  --attack-topo-firewall: #f0a870;
+  --attack-topo-firewall-bg: linear-gradient(
+    155deg,
+    rgba(251, 146, 60, 0.16) 0%,
+    rgba(26, 34, 56, 0.98) 58%
+  );
+  --attack-topo-firewall-border: rgba(251, 146, 60, 0.3);
+  --attack-topo-firewall-soft: rgba(251, 146, 60, 0.14);
+  --attack-topo-firewall-glow: rgba(251, 146, 60, 0.14);
+  --attack-topo-node-bg: #1a2238;
+  --attack-topo-subnet-dot: #a78bfa;
+  --attack-topo-subnet-dot-glow: rgba(124, 58, 237, 0.55);
+  --attack-topo-danger-bg: linear-gradient(
+    155deg,
+    rgba(244, 63, 94, 0.16) 0%,
+    rgba(76, 5, 25, 0.22) 100%
+  );
+  --attack-topo-danger-border: rgba(251, 113, 133, 0.24);
+  --attack-topo-danger-highlight: rgba(255, 255, 255, 0.05);
+  --attack-topo-danger-label: rgba(253, 164, 175, 0.78);
+  --attack-topo-danger-value: #fb7185;
+  --attack-topo-danger-shadow: 0 2px 10px rgba(190, 18, 60, 0.18);
+  --attack-topo-danger-value-glow: 0 0 10px rgba(244, 63, 94, 0.42);
+  --attack-topo-warn-bg: linear-gradient(
+    155deg,
+    rgba(245, 158, 11, 0.14) 0%,
+    rgba(69, 26, 3, 0.22) 100%
+  );
+  --attack-topo-warn-border: rgba(251, 191, 36, 0.22);
+  --attack-topo-warn-highlight: rgba(255, 255, 255, 0.04);
+  --attack-topo-warn-label: rgba(253, 224, 71, 0.72);
+  --attack-topo-warn-value: #fbbf24;
+  --attack-topo-warn-shadow: 0 2px 10px rgba(180, 83, 9, 0.14);
+  --attack-topo-warn-value-glow: 0 0 10px rgba(245, 158, 11, 0.35);
+
+  /* ---------- 10. AI 全屏助手 ---------- */
+  --ai-overlay-sidebar-bg: var(--bg2);
+  --ai-overlay-sidebar-footer-bg: var(--bg3);
+  --ai-overlay-main-bg: var(--bg);
+  --ai-overlay-sidebar-border: var(--rule);
+  --ai-overlay-topbar-border: var(--rule);
+  --ai-overlay-back-btn-bg: var(--c-primary-bg);
+  --ai-overlay-back-btn-border: var(--c-border-strong);
+  --ai-overlay-back-btn-color: var(--accent2);
+  --ai-overlay-new-btn-bg: transparent;
+  --ai-overlay-new-btn-border: var(--c-border-strong);
+  --ai-overlay-new-btn-color: var(--accent2);
+  --ai-overlay-brand-bg: var(--accent);
+  --ai-overlay-brand-color: var(--c-text-on-primary);
+  --ai-overlay-history-hover-bg: rgba(255, 255, 255, 0.05);
+  --ai-overlay-history-active-bg: rgba(124, 58, 237, 0.16);
+  --ai-overlay-history-active-bar: var(--accent);
+  --ai-overlay-history-text: var(--muted);
+  --ai-overlay-history-text-hover: var(--ink2);
+  --ai-overlay-history-text-active: var(--ink);
+  --ai-overlay-history-icon: rgba(148, 153, 176, 0.85);
+  --ai-overlay-history-delete: var(--muted);
+  --ai-overlay-feature-bg: var(--bg2);
+  --ai-overlay-feature-border: var(--rule);
+  --ai-overlay-feature-hover-bg: var(--surface);
+  --ai-overlay-focus-ring: var(--glow);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* ---------- 01. 品牌与语义色 ---------- */
+  --c-danger: #ea580c;
+  --c-danger-bg: rgba(234, 88, 12, 0.12);
+  --c-warn: #ca8a04;
+  --c-warn-bg: rgba(202, 138, 4, 0.12);
+  --c-info: #2563eb;
+  --c-info-bg: rgba(37, 99, 235, 0.12);
+  --c-success: #059669;
+  --c-success-bg: rgba(5, 150, 105, 0.12);
+  --c-neutral: #6b7280;
+  --c-neutral-bg: rgba(107, 114, 128, 0.12);
+  --c-primary: #7c3aed;
+  --c-primary-light: #a78bfa;
+  --c-primary-strong: #6d28d9;
+  --c-primary-bg: rgba(124, 58, 237, 0.12);
+
+  /* ---------- 02. 页面与容器背景 ---------- */
+  --c-bg: #fafafa;
+  --c-bg-card: #ffffff;
+  --c-bg-hover: #f8f9fb;
+  --c-bg-input: #fbfcfe;
+  --c-table-head: #f8f9fb;
+  --shell-bg: var(--c-bg-hover); /* 侧栏 + 顶栏统一背景 */
+
+  /* ---------- 03. 文字颜色 ---------- */
+  --c-text: #1f2230;
+  --c-text-secondary: #4a4f5e;
+  --c-text-muted: #8b8fa1;
+  --c-text-on-primary: #ffffff;
+
+  /* ---------- 03.1 系统默认标签 ---------- */
+  --c-system-default-tag-color: var(--c-text-muted);
+  --c-system-default-tag-border: var(--c-border-strong);
+  --c-system-default-tag-bg: transparent;
+
+  /* ---------- 04. 边框与分割线 ---------- */
+  --c-border: #e4e7eb;
+  --c-border-light: #eef0f3;
+  --c-border-strong: #d1d5db;
+  --c-modal-mask: rgba(15, 23, 42, 0.35);
+  --c-loading-mask: rgba(255, 255, 255, 0.88); /* Loading 遮罩 */
+  --c-scrollbar-thumb: rgba(148, 153, 176, 0.32); /* 滚动条滑块 */
+  --c-scrollbar-thumb-hover: rgba(
+    148,
+    153,
+    176,
+    0.52
+  ); /* 悬停略深一档，避免发黑 */
+  --c-scrollbar-track: transparent; /* 滚动条轨道 */
+
+  /* ---------- 05. 导航组件状态 ---------- */
+  --c-nav-active-bg: #7c3aed;
+  --c-nav-active-border: #7c3aed;
+  --c-nav-active-text: #ffffff;
+
+  /* ---------- 06. 页面级令牌（自包含页面专用） ---------- */
+  --bg: #f5f7f9;
+  --bg2: #ffffff;
+  --bg3: #f8f9fb;
+  --surface: #f0f1f3;
+  --rule: #e4e7eb;
+  --ink: #1f2230;
+  --ink2: #4a4f5e;
+  --muted: #8b8fa1;
+  --accent: #7c3aed;
+  --accent2: #a78bfa;
+  --accent3: #7c3aed;
+  --accent4: #6d28d9;
+  --glow: rgba(124, 58, 237, 0.2);
+  --danger: #ea580c;
+  --danger-soft: rgba(234, 88, 12, 0.12);
+  --warn: #ca8a04;
+  --warn-soft: rgba(202, 138, 4, 0.12);
+  --success: #059669;
+  --success-soft: rgba(5, 150, 105, 0.12);
+  --info: #2563eb;
+  --info-soft: rgba(37, 99, 235, 0.12);
+
+  /* ---------- 07. 风险运营中心页面 ---------- */
+  --risk-ops-header-bg: linear-gradient(
+    110deg,
+    #ffffff 0%,
+    #ffffff 92%,
+    rgba(109, 40, 217, 0.1) 100%
+  );
+  --risk-ops-govern-bg: linear-gradient(135deg, var(--danger) 0%, #c2410c 100%);
+  --risk-ops-security-bg: var(--bg);
+  --risk-ops-security-border: var(--surface);
+
+  /* ---------- 08. AI 智能助手 ---------- */
+  --risk-ops-ai-chat-bg: #f8fafc;
+  --risk-ops-ai-user-bubble-bg: #eff6ff;
+  --risk-ops-ai-user-avatar-bg: #2563eb;
+  --risk-ops-ai-assistant-bubble-bg: #ffffff;
+  --risk-ops-ai-assistant-bubble-border: #e4e7eb;
+  --risk-ops-ai-feature-bg: var(--bg3);
+  --risk-ops-ai-feature-border: var(--rule);
+  --risk-ops-ai-feature-hover-bg: #f0eef9;
+  --risk-ops-ai-input-bg: #ffffff;
+  --risk-ops-ai-footer-bg: #f5f6f8;
+  --risk-ops-ai-input-border: #e4e7eb;
+  --risk-ops-ai-tag-bg: transparent;
+  --risk-ops-ai-tag-danger-color: #ea580c;
+  --risk-ops-ai-tag-danger-border: rgba(234, 88, 12, 0.4);
+  --risk-ops-ai-tag-warn-color: #ca8a04;
+  --risk-ops-ai-tag-warn-border: rgba(202, 138, 4, 0.4);
+  --risk-ops-ai-tag-hover-bg: #f0eef9;
+
+  /* ---------- 09. 攻击面拓扑图 ---------- */
+  --attack-topo-line: rgba(234, 88, 12, 0.1);
+  --attack-topo-flow-start: rgba(251, 191, 36, 0);
+  --attack-topo-flow-warm: rgba(253, 186, 116, 0.28);
+  --attack-topo-flow-core: rgba(255, 255, 255, 0.88);
+  --attack-topo-flow-bright: rgba(251, 191, 36, 0.34);
+  --attack-topo-flow-end: rgba(253, 186, 116, 0);
+  --attack-topo-particle: rgba(251, 191, 36, 0.55);
+  --attack-topo-particle-bright: rgba(253, 224, 71, 0.72);
+  --attack-topo-particle-head: rgba(255, 255, 255, 0.92);
+  --attack-topo-particle-tail: rgba(251, 191, 36, 0);
+  --attack-topo-canvas-bg: #ffffff;
+  --attack-topo-canvas-accent: radial-gradient(
+    ellipse 46% 36% at 50% 52%,
+    rgba(139, 143, 161, 0.06) 0%,
+    transparent 70%
+  );
+  --attack-topo-canvas-border: #eef0f3;
+  --draw-topo-grid-line: rgba(139, 143, 161, 0.4);
+  --draw-topo-grid-stripe: rgba(139, 143, 161, 0.24);
+  --draw-topo-tool-bg: rgba(124, 58, 237, 0.08);
+  --draw-topo-tool-border: rgba(124, 58, 237, 0.22);
+  --draw-topo-tool-icon-filter: none;
+  --draw-topo-label-color: #1f2230;
+  --draw-topo-text-color: #1f2230;
+  --draw-topo-text-block-bg: #ffffff;
+  --draw-topo-text-block-border: rgba(124, 58, 237, 0.22);
+  --draw-topo-shape-label-color: #1f2230;
+  --draw-topo-port-fill: #ffffff;
+  --draw-topo-port-stroke: #7c3aed;
+  --draw-topo-edge-color: #7a4fdb;
+  --attack-topo-card-bg: #ffffff;
+  --attack-topo-card-border: #e8eaed;
+  --attack-topo-card-shadow: 0 1px 6px rgba(15, 23, 42, 0.05);
+  --attack-topo-card-header-bg: #f8f9fb;
+  --attack-topo-card-inner-border: #eef0f3;
+  --attack-topo-internet-color: #3b82f6;
+  --attack-topo-internet-bg: linear-gradient(155deg, #eff6ff 0%, #ffffff 70%);
+  --attack-topo-internet-border: rgba(37, 99, 235, 0.24);
+  --attack-topo-internet-ring: rgba(37, 99, 235, 0.14);
+  --attack-topo-internet-glow: rgba(37, 99, 235, 0.1);
+  --attack-topo-firewall: #e07a2a;
+  --attack-topo-firewall-bg: linear-gradient(155deg, #fff7ed 0%, #ffffff 70%);
+  --attack-topo-firewall-border: rgba(234, 88, 12, 0.24);
+  --attack-topo-firewall-soft: rgba(234, 88, 12, 0.1);
+  --attack-topo-firewall-glow: rgba(234, 88, 12, 0.09);
+  --attack-topo-node-bg: #ffffff;
+  --attack-topo-subnet-dot: #ea580c;
+  --attack-topo-subnet-dot-glow: rgba(234, 88, 12, 0.25);
+  --attack-topo-danger-bg: linear-gradient(
+    155deg,
+    rgba(254, 226, 226, 0.95) 0%,
+    rgba(254, 242, 242, 0.7) 100%
+  );
+  --attack-topo-danger-border: rgba(248, 113, 113, 0.28);
+  --attack-topo-danger-highlight: transparent;
+  --attack-topo-danger-label: #9f1239;
+  --attack-topo-danger-value: #dc2626;
+  --attack-topo-danger-shadow: none;
+  --attack-topo-danger-value-glow: none;
+  --attack-topo-warn-bg: linear-gradient(
+    155deg,
+    rgba(254, 243, 199, 0.95) 0%,
+    rgba(255, 251, 235, 0.7) 100%
+  );
+  --attack-topo-warn-border: rgba(251, 191, 36, 0.3);
+  --attack-topo-warn-highlight: transparent;
+  --attack-topo-warn-label: #92400e;
+  --attack-topo-warn-value: #d97706;
+  --attack-topo-warn-shadow: none;
+  --attack-topo-warn-value-glow: none;
+
+  /* ---------- 10. AI 全屏助手 ---------- */
+  --ai-overlay-sidebar-bg: var(--c-bg-hover);
+  --ai-overlay-sidebar-footer-bg: #eef0f3;
+  --ai-overlay-main-bg: var(--c-bg);
+  --ai-overlay-sidebar-border: var(--c-border);
+  --ai-overlay-topbar-border: var(--c-border);
+  --ai-overlay-back-btn-bg: var(--risk-ops-ai-tag-hover-bg);
+  --ai-overlay-back-btn-border: rgba(124, 58, 237, 0.18);
+  --ai-overlay-back-btn-color: var(--accent);
+  --ai-overlay-new-btn-bg: var(--c-bg-hover);
+  --ai-overlay-new-btn-border: var(--c-border);
+  --ai-overlay-new-btn-color: var(--c-text-muted);
+  --ai-overlay-brand-bg: var(--accent);
+  --ai-overlay-brand-color: var(--c-text-on-primary);
+  --ai-overlay-history-hover-bg: #f0f0f0;
+  --ai-overlay-history-active-bg: #f3f3fb;
+  --ai-overlay-history-active-bar: var(--accent);
+  --ai-overlay-history-text: #8b8fa1;
+  --ai-overlay-history-text-hover: #4a4f5e;
+  --ai-overlay-history-text-active: #1f2230;
+  --ai-overlay-history-icon: #c5c9d4;
+  --ai-overlay-history-delete: #b8bcc8;
+  --ai-overlay-feature-bg: var(--c-bg);
+  --ai-overlay-feature-border: var(--c-border-light);
+  --ai-overlay-feature-hover-bg: var(--c-bg-hover);
+  --ai-overlay-focus-ring: var(--c-primary-bg);
+}
+
+/*
+ * ================================================================
+ * 间距、圆角与阴影
+ * ================================================================
+ * 采用 4px 基准网格，所有间距优先使用以下变量。
+ */
+
+:root {
+  --nav-height: 56px; /* 顶部导航统一高度 */
+  --sidebar-width: 200px; /* 左侧边栏宽度 */
+
+  /* ---------- 07. 间距规范 ---------- */
+  --sp-1: 4px; /* 图标与文字间距、徽章内边距 */
+  --sp-2: 8px; /* 按钮垂直内边距、行内元素间距 */
+  --sp-3: 12px; /* 表格单元格内边距、按钮水平内边距 */
+  --sp-4: 16px; /* 卡片内边距、弹窗头部内边距 */
+  --sp-5: 20px; /* 弹窗主体内边距、区块间距 */
+  --sp-6: 24px; /* 大区块间距、页面边距 */
+  --sp-8: 32px; /* 页面区域间距、Toast 底部距离 */
+  --sp-10: 40px; /* 页面大间距 */
+
+  /* ---------- 07.1 弹窗宽度规范 ---------- */
+  --dialog-width-default: 560px; /* 默认弹窗：详情、确认 */
+  --dialog-width-wide: 760px; /* 宽弹窗：列表、多步骤 */
+  --dialog-width-xl: 960px; /* 超宽弹窗：表格、复杂表单 */
+
+  /* ---------- 08. 圆角规范 ---------- */
+  --back-card: 16px; /* 外卡片圆角统一 */
+  --back-card-inner: 8px; /* 内卡片圆角统一 */
+  --r-button: 8px; /* 按钮圆角统一 */
+  --r-sm: 4px; /* 徽章、小标签 */
+  --r-md: 6px; /* 按钮、输入框、小卡片 */
+  --r-lg: 8px; /* 卡片、表格行悬停 */
+  --r-xl: 12px; /* 弹窗、大面板 */
+  --r-2xl: 16px; /* 特殊大容器 */
+
+  /* ---------- 09. 阴影规范 ---------- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1); /* 细微悬浮 */
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15); /* 卡片悬停 */
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.25); /* Toast、下拉面板 */
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.35); /* 弹窗、模态框 */
+
+  /* ---------- 10. 页面层级规范 ---------- */
+  --top-nav-height: 60px; /* 顶部导航高度，与 TopNav 保持一致 */
+  --z-ai-overlay: 900; /* AI 全屏助手，低于顶部导航 */
+  --z-nav: 1000; /* 顶部导航，始终高于页面内容 */
+}
+
+/*
+ * ================================================================
+ * 字体、字号与字重
+ * ================================================================
+ */
+
+:root {
+  /* 字体族 */
+  --font-sans: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* 字号阶梯 */
+  --fs-xs: 11px; /* 辅助文字、标签、时间戳 */
+  --fs-sm: 12px; /* 表头、次要信息、徽章文字 */
+  --fs-base: 13px; /* 表格正文、列表项、默认文字 */
+  --fs-md: 14px; /* 按钮文字、输入框文字 */
+  --fs-lg: 15px; /* 弹窗标题、小节标题 */
+  --fs-xl: 16px; /* 卡片标题 */
+  --fs-2xl: 18px; /* 页面标题 */
+  --fs-3xl: 20px; /* 区域大标题 */
+  --fs-4xl: 24px; /* 页面主标题 */
+
+  /* 字重规范 */
+  --fw-normal: 400; /* 正文、描述文字 */
+  --fw-medium: 500; /* 表格主要文字、卡片标题 */
+  --fw-semibold: 600; /* 按钮文字、表头、徽章、弹窗标题 */
+  --fw-bold: 700; /* 页面大标题、优先级标签 */
+}
+
+/*
+ * ================================================================
+ * 基础公共样式
+ * ================================================================
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+  color: var(--c-text);
+  background: var(--c-bg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-normal);
+}
+
+body {
+  transition: color 0.25s ease, background-color 0.25s ease;
+}
+
+button,
+input,
+textarea,
+select {
+  color: inherit;
+  font: inherit;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-mono);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.font-mono-500 {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-medium);
+}
+
+.font-mono-700 {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+}

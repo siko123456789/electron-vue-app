@@ -26,13 +26,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src')
     }
   },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://10.10.20.222:8888',
-        changeOrigin: true,
-        secure: false,
-      }
-    }
-  }
+  // server: {
+  //   proxy: {
+  //     '/api': {
+  //       target: 'http://10.10.20.222:8888',
+  //       changeOrigin: true,
+  //       secure: false,
+  //     }
+  //   }
+  // }
 })

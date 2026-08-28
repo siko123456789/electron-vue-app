@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { clearStoredNdrAuthorKey } from '@/utils/ndr'
 
 export type UserInfo = {
   username?: string
@@ -34,6 +33,7 @@ type AuthState = {
 const STORAGE_KEYS = {
   token: 'token',
   userInfo: 'userInfo',
+  rememberLogin: 'rememberLogin',
 } as const
 
 function safeParseJson(value: string | null): unknown {
@@ -45,10 +45,25 @@ function safeParseJson(value: string | null): unknown {
   }
 }
 
-export const useAuthStore = defineStore('auth', {
-  state: (): AuthState => ({
+function readRememberLogin() {
+  const raw = localStorage.getItem(STORAGE_KEYS.rememberLogin)
+  if (raw === null) return true
+  return raw === '1' || raw === 'true'
+}
+
+function readPersistedAuth(): Pick<AuthState, 'token' | 'userInfo'> {
+  if (!readRememberLogin()) {
+    return { token: null, userInfo: null }
+  }
+  return {
     token: localStorage.getItem(STORAGE_KEYS.token),
     userInfo: safeParseJson(localStorage.getItem(STORAGE_KEYS.userInfo)) as UserInfo | null,
+  }
+}
+
+export const useAuthStore = defineStore('auth', {
+  state: (): AuthState => ({
+    ...readPersistedAuth(),
   }),
   getters: {
     // Some backends use cookie/session login and don't return token in body.
@@ -60,16 +75,26 @@ export const useAuthStore = defineStore('auth', {
       const nextToken = (payload.token ?? '').toString().trim()
       this.token = nextToken ? nextToken : null
       this.userInfo = payload.userInfo ?? null
-      if (this.token) localStorage.setItem(STORAGE_KEYS.token, this.token)
-      else localStorage.removeItem(STORAGE_KEYS.token)
-      localStorage.setItem(STORAGE_KEYS.userInfo, JSON.stringify(this.userInfo))
+
+      if (readRememberLogin()) {
+        if (this.token) localStorage.setItem(STORAGE_KEYS.token, this.token)
+        else localStorage.removeItem(STORAGE_KEYS.token)
+        localStorage.setItem(STORAGE_KEYS.userInfo, JSON.stringify(this.userInfo))
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.token)
+        localStorage.removeItem(STORAGE_KEYS.userInfo)
+      }
+    },
+    /** 关闭「记住登录」时：去掉持久化，当前会话内存态仍可保留 */
+    dropPersistedAuth() {
+      localStorage.removeItem(STORAGE_KEYS.token)
+      localStorage.removeItem(STORAGE_KEYS.userInfo)
     },
     clearAuth() {
       this.token = null
       this.userInfo = null
       localStorage.removeItem(STORAGE_KEYS.token)
       localStorage.removeItem(STORAGE_KEYS.userInfo)
-      clearStoredNdrAuthorKey()
     },
   },
 })

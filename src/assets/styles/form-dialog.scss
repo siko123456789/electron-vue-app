@@ -1,0 +1,220 @@
+/*
+ * ================================================================
+ * 添加/编辑弹窗表单通用规范
+ * ================================================================
+ *
+ * 适用场景：el-dialog + el-form 的「添加 / 编辑」类弹窗。
+ *
+ * 标准用法：
+ *
+ * <el-dialog
+ *   class="ledger-form-dialog dialog-width-default"
+ *   append-to-body
+ *   :close-on-click-modal="false"
+ * >
+ *   ...
+ *   <template #footer>
+ *     <span class="dialog-footer">...</span>
+ *   </template>
+ * </el-dialog>
+ *
+ * 说明：
+ * - label 样式由 form.scss 中 .el-form--label-top 统一控制
+ * - 输入框 / 选择器样式由 input.scss 统一控制
+ * - 单选框样式由 radio.scss 统一控制
+ * - 弹窗基础样式由 dialog.scss 统一控制
+ * - 本文件只补充「弹窗表单布局」相关类名
+ */
+
+/* ---------- 01. 弹窗容器（append-to-body 时需挂到 el-dialog 上） ---------- */
+.ledger-form-dialog,
+.asset-dialog {
+  &.el-dialog {
+    width: min(var(--dialog-width-default), calc(100vw - 32px)) !important;
+    max-height: calc(100vh - 48px);
+    padding: 0;
+  }
+
+  &.dialog-width-wide.el-dialog {
+    width: min(var(--dialog-width-wide), calc(100vw - 32px)) !important;
+  }
+
+  &.dialog-width-xl.el-dialog {
+    width: min(var(--dialog-width-xl), calc(100vw - 32px)) !important;
+  }
+
+  .el-dialog__header {
+    height: auto;
+    padding: var(--sp-4) var(--sp-5) !important;
+    line-height: normal;
+  }
+
+  .el-dialog__title {
+    color: var(--c-text);
+    font-family: inherit;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-semibold); /* 弹窗标题：600 */
+  }
+
+  .el-dialog__body {
+    max-height: calc(100vh - 170px);
+    padding: var(--sp-5);
+    overflow-y: auto;
+  }
+
+  .el-dialog__footer {
+    padding: var(--sp-3) var(--sp-5);
+  }
+
+  .el-select,
+  .el-date-editor {
+    width: 100%;
+  }
+}
+
+/* 弹窗内可滚动表单区域（字段较多时使用） */
+.ledger-form-dialog__body {
+  max-height: 62vh;
+  padding-right: 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* ---------- 02. 双列表单网格 ---------- */
+.ledger-form-grid,
+.asset-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+
+  > .el-form-item.ledger-form-grid__full,
+  > .el-form-item.asset-form-grid__full {
+    grid-column: 1 / -1;
+
+    .el-form-item__content {
+      width: 100%;
+    }
+  }
+}
+
+.ledger-form-grid__full,
+.asset-form-grid__full {
+  grid-column: 1 / -1;
+}
+
+/* ---------- 03. 表单项右侧操作按钮（如 + 新增） ---------- */
+.ledger-form-field-with-action,
+.person_add {
+  .el-form-item__content {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.ledger-form-field-with-action {
+  .el-select,
+  .el-cascader,
+  .el-input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.person_add {
+  .el-cascader {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.ledger-form-inline-add-button,
+.inline-add-button {
+  display: inline-flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  margin: 0 0 0 10px !important;
+  padding: 0 !important;
+  color: var(--c-primary);
+  background: var(--c-primary-bg);
+  border-color: var(--c-primary);
+  border-radius: var(--r-md);
+  font-size: 14px;
+}
+
+.ledger-form-inline-add-button:hover,
+.ledger-form-inline-add-button:focus,
+.inline-add-button:hover,
+.inline-add-button:focus {
+  color: var(--c-primary);
+  background: var(--c-bg-hover);
+  border-color: var(--c-primary);
+}
+
+/* ---------- 04. 弹窗内上传区域 ---------- */
+.ledger-form-upload {
+  display: block;
+  width: 100%;
+
+  .el-upload {
+    display: block;
+    width: 100%;
+  }
+
+  .el-upload-dragger {
+    width: 100%;
+    background: var(--c-bg-input);
+    border: 1px dashed var(--c-border-strong);
+    border-radius: var(--r-lg);
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      background: var(--c-primary-bg);
+      border-color: var(--c-primary);
+    }
+
+    .el-icon-upload {
+      color: var(--c-text-muted);
+    }
+
+    .el-upload__text {
+      color: var(--c-text-secondary);
+
+      em {
+        color: var(--c-primary);
+        font-style: normal;
+      }
+    }
+  }
+
+  .el-upload-list__item {
+    color: var(--c-text-secondary);
+    background: var(--c-bg-hover);
+    border: 1px solid var(--c-border);
+    border-radius: var(--r-md);
+
+    .el-icon-close {
+      color: var(--c-text-muted);
+    }
+
+    &:hover {
+      background: var(--c-bg-hover);
+    }
+  }
+}
+
+/* ---------- 05. 小屏单列回退 ---------- */
+@media (max-width: 640px) {
+  .ledger-form-grid,
+  .asset-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ledger-form-grid__full,
+  .asset-form-grid__full {
+    grid-column: auto;
+  }
+}

@@ -1,0 +1,380 @@
+/*
+ * ================================================================
+ * Element UI 按钮覆盖规范
+ * ================================================================
+ * 类型：default / primary / danger / success / text(幽灵)
+ * 尺寸：mini / small / default / medium / large
+ */
+
+/* ---------- 01. 默认按钮 ---------- */
+.el-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  height: 32px;
+  box-sizing: border-box;
+  padding: 7px var(--sp-4);
+  color: var(--c-text-secondary);
+  background: var(--c-bg-hover);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-button);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  line-height: 1.3;
+  box-shadow: none;
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+
+  &:hover,
+  &:focus {
+    color: var(--c-primary);
+    background: var(--c-primary-bg);
+    border-color: var(--c-primary);
+    opacity: 0.9;
+  }
+
+  &:active {
+    color: var(--c-primary-strong);
+    border-color: var(--c-primary-strong);
+    transform: translateY(1px);
+    opacity: 0.9;
+  }
+
+  & + & {
+    margin-left: var(--sp-2);
+  }
+
+  /* 兼容图标由默认 icon 属性或插槽内容传入的两种写法。 */
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+  }
+}
+
+/* ---------- 02. 主操作按钮 ---------- */
+.el-button--primary {
+  color: var(--c-text-on-primary);
+  background: linear-gradient(
+    135deg,
+    var(--c-primary),
+    var(--c-primary-strong)
+  );
+  border-color: transparent;
+
+  &:hover,
+  &:focus {
+    color: var(--c-text-on-primary);
+    background: linear-gradient(
+      135deg,
+      var(--c-primary),
+      var(--c-primary-strong)
+    );
+    border-color: transparent;
+    box-shadow: 0 4px 12px var(--c-primary-bg);
+  }
+
+  &:active {
+    color: var(--c-text-on-primary);
+    background: var(--c-primary-strong);
+    border-color: transparent;
+  }
+}
+
+/* ---------- 02.1 Plain 按钮：覆盖 Element UI 默认蓝色 ---------- */
+.el-button.is-plain {
+  color: var(--c-text-secondary);
+  background: transparent;
+  border-color: var(--c-border-strong);
+
+  &:hover,
+  &:focus {
+    color: var(--c-primary);
+    background: var(--c-primary-bg);
+    border-color: var(--c-primary);
+  }
+
+  &:active,
+  &.is-active {
+    color: var(--c-primary-strong);
+    background: var(--c-primary-bg);
+    border-color: var(--c-primary-strong);
+  }
+}
+
+.el-button--primary.is-plain {
+  color: var(--c-primary-light);
+  background: var(--c-primary-bg);
+  border-color: var(--c-primary);
+
+  &:hover,
+  &:focus {
+    color: var(--c-text-on-primary);
+    background: var(--c-primary);
+    border-color: var(--c-primary);
+  }
+
+  &:active,
+  &.is-active {
+    color: var(--c-text-on-primary);
+    background: var(--c-primary-strong);
+    border-color: var(--c-primary-strong);
+  }
+}
+
+/* ---------- 03. 危险操作按钮 ---------- */
+.el-button--danger {
+  color: var(--c-text-on-primary);
+  background: var(--c-danger);
+  border-color: transparent;
+
+  &:hover,
+  &:focus {
+    color: var(--c-text-on-primary);
+    background: var(--c-danger);
+    border-color: transparent;
+    box-shadow: 0 4px 12px var(--c-danger-bg);
+    filter: brightness(1.06);
+  }
+
+  &:active {
+    color: var(--c-text-on-primary);
+    background: var(--c-danger);
+    border-color: transparent;
+    filter: brightness(0.92);
+  }
+}
+
+/* ---------- 04. 成功操作按钮 ---------- */
+.el-button--success {
+  color: var(--c-text-on-primary);
+  background: var(--c-success);
+  border-color: transparent;
+
+  &:hover,
+  &:focus {
+    color: var(--c-text-on-primary);
+    background: var(--c-success);
+    border-color: transparent;
+    box-shadow: 0 4px 12px var(--c-success-bg);
+    filter: brightness(1.06);
+  }
+
+  &:active {
+    color: var(--c-text-on-primary);
+    background: var(--c-success);
+    border-color: transparent;
+    filter: brightness(0.92);
+  }
+}
+
+/* ---------- 05. 文字 / 幽灵按钮：仅变文字色，无背景/边框/内边距 ---------- */
+.el-button--text,
+.el-button.is-ghost {
+  height: auto;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  border-radius: 0;
+
+  &:hover,
+  &:focus {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    opacity: 1;
+  }
+
+  &:active {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    transform: none;
+  }
+
+  &.is-disabled,
+  &.is-disabled:hover,
+  &.is-disabled:focus,
+  &.is-loading {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+
+/* 文字按钮 */
+.el-button--text {
+  color: var(--c-primary);
+  font-weight: 600;
+
+  &:hover,
+  &:focus {
+    color: var(--c-primary-strong);
+  }
+
+  &:active {
+    color: var(--c-primary-strong);
+  }
+
+  &.is-disabled,
+  &.is-disabled:hover,
+  &.is-disabled:focus,
+  &.is-loading {
+    color: var(--c-primary);
+  }
+}
+
+/* 幽灵按钮：默认灰色，悬停黑色 */
+.el-button.is-ghost {
+  color: var(--muted);
+
+  &:hover,
+  &:focus {
+    color: var(--ink);
+  }
+
+  &:active {
+    color: var(--ink);
+  }
+
+  &.is-disabled,
+  &.is-disabled:hover,
+  &.is-disabled:focus,
+  &.is-loading {
+    color: var(--muted);
+  }
+}
+
+.el-button--text.el-button--mini,
+.el-button--text.el-button--small,
+.el-button--text.el-button--medium,
+.el-button--text.el-button--large,
+.el-button.is-ghost.el-button--mini,
+.el-button.is-ghost.el-button--small,
+.el-button.is-ghost.el-button--medium,
+.el-button.is-ghost.el-button--large {
+  height: auto;
+  padding: 0;
+}
+
+/* ---------- 06. 按钮尺寸 ---------- */
+.el-button--mini {
+  height: 26px;
+  padding: var(--sp-1) 10px;
+  border-radius: var(--r-button);
+  font-size: var(--fs-xs);
+}
+
+.el-button--small {
+  height: 26px;
+  padding: var(--sp-1) 10px;
+  border-radius: var(--r-button);
+  font-size: var(--fs-xs);
+}
+
+.el-button--medium {
+  height: 32px;
+  padding: 7px var(--sp-4);
+  font-size: var(--fs-sm);
+}
+
+/* Element UI 没有内置 large，项目中可使用 size="large" 或 el-button--large */
+.el-button--large {
+  height: 40px;
+  padding: 10px var(--sp-6);
+  border-radius: var(--r-button);
+  font-size: var(--fs-md);
+}
+
+/* ---------- 07. 禁用与加载状态 ---------- */
+.el-button.is-disabled,
+.el-button.is-disabled:hover,
+.el-button.is-disabled:focus,
+.el-button.is-loading {
+  color: var(--c-text-muted);
+  background: var(--c-bg-hover);
+  border-color: var(--c-border-light);
+  box-shadow: none;
+  filter: none;
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.el-button--primary.is-disabled,
+.el-button--danger.is-disabled,
+.el-button--success.is-disabled {
+  color: var(--c-text-on-primary);
+  background: var(--c-neutral);
+  border-color: transparent;
+}
+
+/* ---------- 08. 圆形按钮 ---------- */
+.el-button.is-circle {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.el-button--mini.is-circle {
+  width: 22px;
+  height: 22px;
+}
+
+.el-button--small.is-circle {
+  width: 22px;
+  height: 22px;
+}
+
+.el-button--medium.is-circle {
+  width: 28px;
+  height: 28px;
+}
+
+.el-button--large.is-circle {
+  width: 36px;
+  height: 36px;
+}
+
+/* ---------- 09. 治理弹窗返回按钮 ---------- */
+.el-button.govern-back-btn {
+  height: auto;
+  padding: 4px 8px;
+  margin-left: -8px;
+  color: var(--c-text-secondary);
+  background: transparent;
+  border-color: transparent;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease, transform 0.15s ease;
+
+  .el-icon {
+    margin-right: 2px;
+    font-size: 16px;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover,
+  &:focus {
+    color: var(--c-primary);
+    background: var(--c-primary-bg);
+    border-color: transparent;
+
+    .el-icon {
+      transform: translateX(-2px);
+    }
+  }
+
+  &:active {
+    color: var(--c-primary-strong);
+    background: var(--c-primary-bg);
+    transform: translateY(1px);
+
+    .el-icon {
+      transform: translateX(-3px);
+    }
+  }
+}

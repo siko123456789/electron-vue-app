@@ -7,7 +7,7 @@
   "type": "module",
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "chcp 65001 >nul 2>&1 && vite",
     "build:web": "vite build",
     "build:electron": "electron-builder",
     "build": "npm run build:web && npm run build:electron",

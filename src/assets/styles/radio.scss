@@ -1,0 +1,102 @@
+/* Element UI 单选框统一规范。 */
+.el-radio-group {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 32px;
+  flex-wrap: wrap;
+}
+
+.el-radio {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0;
+  color: var(--c-text-secondary);
+}
+
+.el-radio__inner {
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  border-color: var(--c-border-strong);
+  border-width: 2px;
+}
+
+.el-radio__inner:hover,
+.el-radio__input.is-focus .el-radio__inner {
+  border-color: var(--c-primary);
+}
+
+.el-radio__inner::after {
+  width: 8px;
+  height: 8px;
+  background: var(--c-primary);
+}
+
+.el-radio__input.is-checked .el-radio__inner {
+  background: transparent;
+  border-color: var(--c-primary);
+}
+
+.el-radio__input.is-checked + .el-radio__label {
+  color: var(--c-text-secondary);
+}
+
+.el-radio__label {
+  padding-left: 8px;
+  color: var(--c-text-secondary);
+  font-size: var(--fs-base);
+}
+
+.el-radio__input.is-disabled .el-radio__inner {
+  background: var(--c-bg-hover);
+  border-color: var(--c-border-light);
+}
+
+.el-radio__input.is-disabled + .el-radio__label {
+  color: var(--c-text-muted);
+}
+
+/* Radio Button 按钮组统一主题。 */
+.el-radio-group .el-radio-button + .el-radio-button {
+  margin-left: -24px;
+}
+
+.el-radio-group .el-radio-button__inner {
+  color: var(--c-text-secondary);
+  background: var(--c-bg-input);
+  border-color: var(--c-border);
+  box-shadow: none;
+  font-size: var(--fs-sm);
+  transition: color 0.2s ease, background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.el-radio-group .el-radio-button:first-child .el-radio-button__inner {
+  border-left-color: var(--c-border);
+}
+
+.el-radio-group .el-radio-button__inner:hover,
+.el-radio-group .el-radio-button__orig-radio:focus + .el-radio-button__inner {
+  color: var(--c-primary);
+  background: var(--c-primary-bg);
+  border-color: var(--c-primary);
+}
+
+.el-radio-group
+  .el-radio-button__orig-radio:checked
+  + .el-radio-button__inner {
+  color: var(--c-text-on-primary);
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  box-shadow: -1px 0 0 0 var(--c-primary);
+}
+
+.el-radio-group
+  .el-radio-button__orig-radio:disabled
+  + .el-radio-button__inner {
+  color: var(--c-text-muted);
+  background: var(--c-bg-hover);
+  border-color: var(--c-border-light);
+  opacity: 0.6;
+}

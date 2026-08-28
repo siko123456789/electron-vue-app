@@ -5,6 +5,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import { pinia } from '@/stores'
+import { logger } from '@/utils/logger'
 
 // 存储 API 基础 URL 的 localStorage 键名
 const SETTINGS_API_BASE_KEY = 'apiBase'
@@ -21,6 +22,12 @@ const OFFLINE_QUEUE_KEY = 'offline_ops_v1'
 // Electron IPC mode: persist cookies from Set-Cookie and send them via Cookie header
 // because renderer devtools can't inspect net.request headers/cookies easily.
 const IPC_COOKIE_KEY = 'ipc_cookie_v1'
+let authExpiredEventSent = false
+
+/** 新一轮登录成功后允许再次广播登录失效事件。 */
+export function resetAuthExpiredEvent() {
+  authExpiredEventSent = false
+}
 
 /**
  * 离线操作类型定义
@@ -51,6 +58,21 @@ function joinUrl(base: string, path: string): string {
   return `${b}${p}`
 }
 
+function sanitizeForLog(data: unknown): unknown {
+  if (!data || typeof data !== 'object') return data
+  if (Array.isArray(data)) return data.map(sanitizeForLog)
+  // Vue 的 reactive/ref 嵌套数组是 Proxy，不能直接通过 Electron IPC structured clone。
+  // 这里递归展开所有层级，确保日志元数据只包含普通对象、数组和基础类型。
+  const copy: Record<string, unknown> = {}
+  Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
+    copy[key] = sanitizeForLog(value)
+  })
+  for (const key of ['password', 'pwd', 'token', 'authorization', 'Authorization']) {
+    if (key in copy) copy[key] = '***'
+  }
+  return copy
+}
+
 function logResolvedRequest(info: {
   source: string
   method: string
@@ -60,17 +82,14 @@ function logResolvedRequest(info: {
   data?: any
   config?: any
 }) {
-  try {
-    console.log('[request] 请求来源:', info.source)
-    console.log('[request] 请求方法:', info.method)
-    console.log('最终请求URL:', info.url)
-    console.log('当前base:', info.baseURL || info.config || '')
-    if (info.params !== undefined) console.log('[request] query参数:', info.params)
-    if (info.data !== undefined) console.log('[request] body参数:', info.data)
-    if (info.config !== undefined) console.log('[request] 原始配置:', info.config)
-  } catch {
-    // ignore logging failures
-  }
+  logger.debug('HTTP 请求', {
+    source: info.source,
+    method: info.method,
+    url: info.url,
+    baseURL: info.baseURL || undefined,
+    params: info.params !== undefined ? sanitizeForLog(info.params) : undefined,
+    data: info.data !== undefined ? sanitizeForLog(info.data) : undefined,
+  })
 }
 
 function applyAuthHeaders(headers: Record<string, any>, token: string | null) {
@@ -364,22 +383,85 @@ export function clearApiCache() {
   }
 }
 
+/** 当前本地 API 缓存条目数 */
+export function getApiCacheCount() {
+  try {
+    return loadCacheKeys().length
+  } catch {
+    return 0
+  }
+}
+
+/**
+ * 按保留天数清理过期 API 缓存（条目带 ts）
+ * @returns 删除条数
+ */
+export function purgeExpiredApiCache(retentionDays: number) {
+  const days = Number(retentionDays)
+  if (!Number.isFinite(days) || days <= 0) return 0
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
+  let removed = 0
+  try {
+    const keys = loadCacheKeys()
+    const keep: string[] = []
+    for (const key of keys) {
+      try {
+        const raw = localStorage.getItem(key)
+        if (!raw) {
+          removed += 1
+          continue
+        }
+        const parsed = JSON.parse(raw) as { ts?: number }
+        const ts = Number(parsed?.ts)
+        if (!Number.isFinite(ts) || ts < cutoff) {
+          localStorage.removeItem(key)
+          removed += 1
+        } else {
+          keep.push(key)
+        }
+      } catch {
+        localStorage.removeItem(key)
+        removed += 1
+      }
+    }
+    saveCacheKeys(keep)
+  } catch {
+    // ignore
+  }
+  return removed
+}
+
 /**
  * 规范化响应数据
  * 根据后端返回的 code 字段判断请求是否成功
  * @param data 响应数据
  * @returns 处理后的数据
  */
-function normalizeResponseData(data: any) {
+function normalizeResponseData(data: any, options: { throwOnError?: boolean } = {}) {
   if (data && typeof data === 'object' && 'code' in data) {
     const code = (data as any).code
     // 如果 code 为 200 或 0，认为请求成功
     if (code === 200 || code === 0) return data
 
     const message = (data as any).message || (data as any).msg
-    console.error('响应错误:', message)
-    if (Number(code) === 1004) handleUnauthorized()
-    throw new Error(message || '请求失败')
+    // 后端可能返回 HTTP 200，但用业务码 1004 表示登录态已失效。
+    // 登录接口自身的失败响应不触发跳转，避免在登录页形成无意义的处理。
+    if (Number(code) === 1004 && options.throwOnError !== false) {
+      logger.warn('登录态已失效，需要重新登录', { code, message })
+      handleUnauthorized()
+    }
+    logger.error('接口响应错误', { code, message })
+    if (options.throwOnError === false) return data
+    // Preserve the complete backend response. Login failures may include
+    // fail_count, max_fail_count and remain_to_lock in data.
+    const error = new Error(message || '请求失败') as Error & {
+      code?: unknown
+      responseData?: any
+    }
+    error.code = code
+    error.responseData = data
+    logger.error('接口响应错误详情', { code, message, data: sanitizeForLog(data) })
+    throw error
   }
 
   return data
@@ -395,6 +477,23 @@ function handleUnauthorized() {
     authStore.clearAuth()
   } catch {
     // ignore
+  }
+
+  // IPC 请求会显式携带这个 Cookie；Token 失效时必须一起清掉，
+  // 否则重新打开登录页后仍可能继续使用旧 session。
+  try {
+    localStorage.removeItem(IPC_COOKIE_KEY)
+  } catch {
+    // ignore
+  }
+
+  if (!authExpiredEventSent) {
+    authExpiredEventSent = true
+    try {
+      window.dispatchEvent(new Event('app-auth-expired'))
+    } catch {
+      // ignore
+    }
   }
 
   // Avoid redirect loop when we're already on the login page (hash router).
@@ -471,9 +570,6 @@ async function requestViaIpc(
 
     // Many backends do not include token in response body; they send it in headers/cookies.
     if (String(url || '').includes('/user/login')) {
-      // Help debug in renderer console (devtools can't see net.request headers easily).
-      try { console.log('[login] ipc response headers:', resHeaders) } catch {}
-
       const headerToken = extractTokenFromHeaders(resHeaders)
       if (headerToken) {
         try { localStorage.setItem('token', headerToken) } catch {}
@@ -482,17 +578,23 @@ async function requestViaIpc(
           else if (!(parsed as any).token) (parsed as any).token = headerToken
         }
       }
+      logger.debug('登录接口响应', { status, code: parsed?.code, hasToken: Boolean(headerToken || parsed?.data?.token) })
     }
 
     if (status === 401) {
+      logger.warn('未授权，需要重新登录', { url: fullUrl, status })
       handleUnauthorized()
       throw new Error('未授权，请重新登录')
     }
     if (status >= 400) {
+      logger.error('HTTP 请求失败', { method, url: fullUrl, status })
       throw new Error(`请求失败: ${status}`)
     }
 
-    const normalized = normalizeResponseData(parsed)
+    const normalized = normalizeResponseData(parsed, {
+      throwOnError: !String(url || '').includes('/user/login')
+    })
+    logger.debug('HTTP 响应', { method, url: fullUrl, status, data: sanitizeForLog(normalized) })
     if (method === 'GET') cacheSet('GET', fullUrl, normalized)
     return normalized
   } catch (err: any) {
@@ -501,9 +603,12 @@ async function requestViaIpc(
     if (method === 'GET' && !isAuthError) {
       const cached = cacheGet('GET', fullUrl)
       if (cached !== null) {
-        console.warn('离线/网络异常，已返回缓存数据:', fullUrl)
+        logger.warn('离线/网络异常，已返回缓存数据', { url: fullUrl })
         return cached
       }
+    }
+    if (!isAuthError) {
+      logger.error('HTTP 请求异常', { method, url: fullUrl, error: msg })
     }
     throw err
   }
@@ -544,7 +649,7 @@ service.interceptors.request.use(
     return config
   },
   (error) => {
-    console.error('请求错误:', error)
+    logger.error('请求拦截器错误', { error: String(error?.message || error) })
     return Promise.reject(error)
   }
 )
@@ -572,56 +677,55 @@ service.interceptors.response.use(
       // ignore
     }
 
-    const normalized = normalizeResponseData(response.data)
+    const normalized = normalizeResponseData(response.data, {
+      throwOnError: !String(response.config?.url || '').includes('/user/login')
+    })
     const method = String(response.config?.method || 'GET').toUpperCase()
+    const base = String(response.config?.baseURL || getRuntimeBaseURL())
+    const url = String(response.config?.url || '')
+    const fullUrl = joinUrl(base, url) + toQuery((response.config as any)?.params)
+    logger.debug('HTTP 响应', { method, url: fullUrl, status: response.status, data: sanitizeForLog(normalized) })
     if (method === 'GET') {
-      const base = String(response.config?.baseURL || getRuntimeBaseURL())
-      const url = String(response.config?.url || '')
-      const fullUrl = joinUrl(base, url) + toQuery((response.config as any)?.params)
       cacheSet('GET', fullUrl, normalized)
     }
     return normalized
   },
   (error) => {
-    console.error('响应错误:', error)
-    // 处理网络错误、超时等情况
+    const method = String(error.config?.method || 'GET').toUpperCase()
+    const base = String(error.config?.baseURL || getRuntimeBaseURL())
+    const url = String(error.config?.url || '')
+    const fullUrl = joinUrl(base, url) + toQuery((error.config as any)?.params)
+
     if (error.response) {
-      // 服务器返回错误状态码
-      switch (error.response.status) {
+      const status = error.response.status
+      switch (status) {
         case 401:
-          // 未授权，可能需要重新登录
-          console.error('未授权，请重新登录')
+          logger.warn('未授权，需要重新登录', { url: fullUrl, status })
           handleUnauthorized()
           break
         case 403:
-          console.error('拒绝访问')
+          logger.error('拒绝访问', { url: fullUrl, status })
           break
         case 404:
-          console.error('请求地址不存在')
+          logger.error('请求地址不存在', { url: fullUrl, status })
           break
         case 500:
-          console.error('服务器内部错误')
+          logger.error('服务器内部错误', { url: fullUrl, status })
           break
         default:
-          console.error(`请求失败: ${error.response.status}`)
+          logger.error('HTTP 请求失败', { method, url: fullUrl, status })
       }
     } else if (error.request) {
-      // 请求已发出，但没有收到响应
-      console.error('网络错误，未收到响应')
-      const method = String(error.config?.method || 'GET').toUpperCase()
+      logger.error('网络错误，未收到响应', { method, url: fullUrl })
       if (method === 'GET') {
-        const base = String(error.config?.baseURL || getRuntimeBaseURL())
-        const url = String(error.config?.url || '')
-        const fullUrl = joinUrl(base, url) + toQuery((error.config as any)?.params)
         const cached = cacheGet('GET', fullUrl)
         if (cached !== null) {
-          console.warn('离线/网络异常，已返回缓存数据:', fullUrl)
+          logger.warn('离线/网络异常，已返回缓存数据', { url: fullUrl })
           return Promise.resolve(cached)
         }
       }
     } else {
-      // 请求配置出错
-      console.error('请求配置错误:', error.message)
+      logger.error('请求配置错误', { error: String(error.message || error) })
     }
     return Promise.reject(error)
   }

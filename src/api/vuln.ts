@@ -1,19 +1,10 @@
+/** 漏洞状态接口 */
 import request from '@/utils/request'
 
-type ApiData = Record<string, any> | any[] | undefined
+/** POST /api/vuln/UpdataVulnStatus：更新漏洞状态 */
+export function updataVulnStatusAPI(data: Record<string, unknown>) { return request.post('/vuln/UpdataVulnStatus', data) }
 
-export function GetVulnInfo(data?: ApiData) {
-  return request({
-    url: '/vlun/GetVulnInfo',
-    method: 'post',
-    data
-  })
-}
-
-export function pocVerifyAPI(data?: ApiData) {
-  return request({
-    url: '/vlun/vas/poc',
-    method: 'post',
-    data
-  })
+/** POST /api/hawk/vulnVerify：直接验证关键漏洞/弱口令 */
+export function hawkVulnVerifyAPI(data: Record<string, unknown>) {
+  return request.post('/hawk/vulnVerify', data)
 }

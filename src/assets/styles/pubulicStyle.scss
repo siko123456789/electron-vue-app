@@ -1,0 +1,173 @@
+/* 端口、协议等短值使用的统一主题徽章 */
+.port-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  color: var(--c-primary-light);
+  background: var(--c-primary-bg);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+/* 状态tag(绿色和灰色) */
+.status-tag-green,
+.status-tag-gray {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  background: var(--c-success-bg);
+  color: var(--c-success);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  border-radius: var(--r-sm);
+  font-size: var(--fs-xs);
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.status-tag-gray {
+  background: transparent;
+  border: 1px solid var(--c-border-strong);
+  color: var(--c-text-muted);
+}
+
+/*
+ * ================================================================
+ * 公共面包屑
+ * 普通层级使用辅助文字色，当前页使用正文强调色。
+ * ================================================================
+ */
+
+.ledger-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--sp-3);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.ledger-breadcrumb__link {
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.ledger-breadcrumb__link:hover,
+.ledger-breadcrumb__link:focus-visible {
+  color: var(--c-primary);
+  outline: none;
+}
+
+.ledger-breadcrumb__sep {
+  color: var(--muted);
+  opacity: 0.45;
+}
+
+.ledger-breadcrumb__current {
+  color: var(--ink);
+}
+
+.ledger-table-link {
+  cursor: pointer;
+  border-bottom: 1px dashed var(--c-primary);
+  font-size: 14px;
+  transition: color 0.15s ease;
+  &:hover {
+    color: var(--c-primary);
+  }
+}
+
+/* 表格空状态（图标 + 文案居中） */
+.ledger-table-empty-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  > i {
+    font-size: 60px;
+    color: var(--muted);
+  }
+  > span {
+    color: var(--c-text-muted);
+    font-size: 13px;
+    line-height: 40px;
+  }
+}
+
+/*
+ * ================================================================
+ * 设置页通用卡片（通知配置 / 开机自启 / 应用锁等）
+ * ================================================================
+ */
+.setting-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  border: 1px solid color-mix(in srgb, var(--c-primary) 22%, var(--c-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--c-bg) 55%, var(--c-bg-card));
+}
+
+.setting-card__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.setting-card__title {
+  color: var(--c-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.setting-card__desc {
+  margin: 6px 0 0;
+  color: var(--c-text-muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.setting-card__time {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.setting-card__time-sep {
+  color: var(--c-text-muted);
+  font-size: 13px;
+}
+
+.setting-card__extra {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.setting-card__extra-label {
+  color: var(--c-text-secondary);
+  font-size: 13px;
+}

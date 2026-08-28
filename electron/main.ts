@@ -9,19 +9,24 @@
  * - 配置管理（通知开关等用户设置）1
  */
 
-import { app, BrowserWindow, ipcMain, nativeImage, session, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeImage, powerMonitor, session, shell } from 'electron'
 import { fileURLToPath } from 'node:url'
 import * as path from 'node:path'
 import windowStateKeeper from 'electron-window-state'
+import { ensureWinConsoleUtf8 } from './main/console-encoding'
+
+ensureWinConsoleUtf8()
 
 // 导入各个功能模块
 import { createTrayManager } from './main/tray-manager'           // 系统托盘管理
+import { createNotifyWsManager } from './main/notify-ws'         // 通知长连接
 import { createConfigStore } from './main/config'                 // 配置存储
 import { registerHttpRequestIpc } from './main/ipc-http'           // HTTP 请求 IPC 处理
 import { createWindowManager } from './main/window-manager'       // 主窗口管理
 import { createAlertManager } from './main/alert-manager'         // 告警通知管理
 import { createTestAlertsRunner } from './main/test-alerts'        // 测试告警功能
 import { registerAppIpcHandlers } from './main/app-ipc'            // 应用级 IPC 处理器
+import { createAppLogger } from './main/logger'                   // 本地文件日志
 
 // ============= 路径配置 =============
 
@@ -111,6 +116,7 @@ const windowManager = createWindowManager({
   VITE_DEV_SERVER_URL,         // 开发服务器地址（开发时用）
   appRoot: String(process.env.APP_ROOT || ''),  // 项目根目录（用于找图标等资源）
   onReadyToShow: () => trayManager.onMainWindowReady(),  // 窗口准备好时的回调（通知托盘管理器）
+  onMainWindowShown: () => trayManager.onMainWindowShown?.(),
 })
 
 // ============= 单实例锁（防止应用重复启动） =============
@@ -253,9 +259,9 @@ function openEventsPageFromNotification(payload?: { id?: string }) {
   showMainWindow()  // 先显示主窗口
 
   try {
-    // 通过 IPC 发送消息给渲染进程，让前端跳转到事件页
+    // 通过 IPC 发送消息给渲染进程，让前端跳转到风险监测
     windowManager.getWin()?.webContents.send('app/navigate', {
-      path: '/events',
+      path: '/risk-monitor',
       alertId: payload?.id || '',
     })
   } catch {
@@ -343,8 +349,10 @@ const alertManager = createAlertManager({
   isNotificationsEnabled: () => notificationsEnabled,  // 检查通知是否启用
   onAppAlertToRenderer: (payload) => {       // 当有告警时，发送消息给渲染进程
     try {
-      // 记录告警到托盘管理器（用于预览窗口显示）
-      trayManager.recordAlert(payload)
+      // 仅 P0 进入托盘悬停列表；P1 只做限时弹窗
+      if (payload.id !== 'auth-expired' && (payload.priority === undefined || Number(payload.priority) === 0)) {
+        trayManager.recordAlert(payload)
+      }
 
       // 通过 IPC 发送消息给前端，前端可以在消息中心显示
       windowManager.getWin()?.webContents.send('app/alert', payload)
@@ -355,7 +363,24 @@ const alertManager = createAlertManager({
   // 当主窗口隐藏时，让托盘显示气泡通知
   onBalloonWhenHidden: (payload) => trayManager.maybeShowBalloonWhenHidden(payload),
   // 点击通知时的回调（跳转到事件详情页）
-  onAlertClick: (payload) => openEventsPageFromNotification(payload),
+  onAlertClick: (payload) => {
+    if (payload?.id === 'auth-expired') {
+      showMainWindow()
+      try {
+        windowManager.getWin()?.webContents.send('app/navigate', { path: '/login' })
+      } catch {
+        // ignore
+      }
+      alertManager.dismissAlert?.('auth-expired')
+      return
+    }
+    openEventsPageFromNotification(payload)
+  },
+})
+
+const notifyWsManager = createNotifyWsManager({
+  getWin: () => windowManager.getWin(),
+  showAlert: (payload) => alertManager.showAlert(payload as any, BrowserWindow),
 })
 
 // ============= 创建测试告警管理器 =============
@@ -454,6 +479,7 @@ app.on('before-quit', () => {
   alertManager.stopAlertBeep()       // 停止告警蜂鸣声
   testAlerts.stop()                  // 停止测试告警
   trayManager.stopTrayBlink()        // 停止托盘图标闪烁
+  notifyWsManager.stop()             // 断开通知长连接
 })
 
 // ============= 测试告警控制 =============
@@ -473,6 +499,13 @@ function setTestAlertsEnabled(enabled: boolean) {
  * 在这里进行所有初始化工作
  */
 app.whenReady().then(() => {
+  powerMonitor.on('resume', () => {
+    try {
+      windowManager.getWin()?.webContents.send('app/system-resume')
+    } catch {
+      // ignore
+    }
+  })
   // ============= Windows 平台设置 =============
 
   /**
@@ -504,6 +537,9 @@ app.whenReady().then(() => {
    */
   let configStore: ReturnType<typeof createConfigStore> | null = null
   configStore = createConfigStore(path.join(app.getPath('userData'), 'app-config.json'))
+
+  const logger = createAppLogger(app)
+  logger.info('应用启动', { version: app.getVersion(), platform: process.platform })
 
   // ============= 忽略 HTTPS 证书错误 =============
 
@@ -563,6 +599,7 @@ app.whenReady().then(() => {
     windowManager,                                    // 窗口管理器
     trayManager,                                      // 托盘管理器
     alertManager,                                     // 告警管理器
+    notifyWs: notifyWsManager,                        // 通知长连接
     testAlerts,                                       // 测试告警管理器
     getNotificationsEnabled: () => notificationsEnabled,  // 获取通知开关状态
     setNotificationsEnabled: async (enabled) => {    // 设置通知开关状态
@@ -571,6 +608,7 @@ app.whenReady().then(() => {
       await configStore?.saveAppConfig({ notificationsEnabled })
       return notificationsEnabled
     },
+    logger,
   })
 
   // ============= 创建主窗口 =============

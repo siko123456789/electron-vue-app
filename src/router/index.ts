@@ -1,99 +1,54 @@
-// src/router/index.ts
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { pinia } from '@/stores'
 
-const routes: RouteRecordRaw[] = [
-  {
-    path: '/',
-    redirect: '/login'
-  },
-  {
-    path: '/login',
-    name: 'Login',
-    component: () => import('../views/Login.vue'),
-    meta: {
-      requiresAuth: false
-    }
-  },
-  {
-    path: '/workbench',
-    name: 'Workbench',
-    component: () => import('../views/workBench/workbench.vue'),
-    meta: {
-      requiresAuth: true
-    }
-  },
-  // {
-  //   path: '/attack-surface',
-  //   name: 'AttackSurface',
-  //   component: () => import('@/views/attackSurface/index.vue'),
-  //   meta: {
-  //     requiresAuth: true,
-  //     title: '攻击面治理'
-  //   }
-  // },
-  // {
-  //   path: '/threat-assessment',
-  //   name: 'ThreatAssessment',
-  //   component: () => import('@/views/threatAssessment/index.vue'),
-  //   meta: {
-  //     requiresAuth: true,
-  //     title: '威胁评估'
-  //   },
-  // },
-  {
-    path: '/events',
-    name: 'Events',
-    component: () => import('@/views/events/index.vue'),
-    meta: {
-      requiresAuth: true,
-      title: '事件响应'
-    },
-  },
-  // {
-  //   path: '/operation',
-  //   name: 'Operation',
-  //   component: () => import('@/views/operation/index.vue'),
-  //   meta: {
-  //     requiresAuth: true,
-  //     title: '策略整改'
-  //   },
-  // },
-  {
-    path: '/settings',
-    name: 'Settings',
-    component: () => import('@/views/Settings.vue'),
-    meta: {
-      requiresAuth: true,
-      title: '设置',
-    },
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: '/login'
-  }
-]
+const HOME_PATH = '/risk-monitor'
 
 const router = createRouter({
   history: createWebHashHistory(),
-  routes
+  routes: [
+    {
+      path: '/',
+      redirect: HOME_PATH,
+    },
+    {
+      path: '/login',
+      name: 'Login',
+      component: () => import('@/views/Login.vue'),
+      meta: { requiresAuth: false, title: '登录' },
+    },
+    {
+      path: HOME_PATH,
+      name: 'RiskMonitor',
+      component: () => import('@/views/riskMonitor/index.vue'),
+      meta: { requiresAuth: true, title: '风险监测' },
+    },
+    {
+      path: '/settings',
+      name: 'Settings',
+      component: () => import('@/views/setting/index.vue'),
+      meta: { requiresAuth: true, title: '设置' },
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: HOME_PATH,
+    },
+  ],
 })
 
-// 路由守卫
-router.beforeEach((to, _from, next) => {
-  // 检查是否需要认证
-  if (to.meta.requiresAuth !== false) {
-    const authStore = useAuthStore(pinia)
-    // 如果没有登录态，跳转到登录页面
-    if (!authStore.isLoggedIn) {
-      next('/login')
-    } else {
-      next()
-    }
-  } else {
-    next()
+router.beforeEach((to) => {
+  const authStore = useAuthStore()
+  const requiresAuth = to.meta.requiresAuth !== false
+
+  if (requiresAuth && !authStore.isLoggedIn) {
+    return { path: '/login', query: { redirect: to.fullPath } }
   }
+
+  if (to.path === '/login' && authStore.isLoggedIn) {
+    return HOME_PATH
+  }
+
+  return true
 })
 
 export default router
+export { HOME_PATH }

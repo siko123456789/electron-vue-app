@@ -75,14 +75,16 @@
 
 		<script setup>
 		import { ref, reactive, onMounted } from "vue"
-	import { useRouter } from "vue-router"
+	import { useRoute, useRouter } from "vue-router"
 	import { ElMessage } from "element-plus"
 	import { login as loginApi } from "@/api/login"
 	import { useAuthStore } from "@/stores/auth"
 	import { useSettingsStore } from "@/stores/settings"
-	import { ensureNdrAuthorKey } from "@/utils/ndr"
+	import { logger } from "@/utils/logger"
+	import { HOME_PATH } from "@/router"
 
 	const router = useRouter()
+	const route = useRoute()
 	const authStore = useAuthStore()
 	const settingsStore = useSettingsStore()
 
@@ -127,30 +129,35 @@ const rules = {
 	      password: form.password,
 	      code: form.code
 	    })
-    console.log(res,12345)
-		    if (res.code === 0) {
+		    if (res.code === 0 || res.code === 200) {
 		      const token =
 		        (typeof res?.data?.token === "string" && res.data.token.trim()) ? res.data.token.trim()
 		        : ((localStorage.getItem("token") || "").trim())
 
 		      // Token is preferred; if backend uses cookie/session and doesn't expose token, allow entry with userInfo.
 			      authStore.setAuth({ token: token || null, userInfo: res.data })
-			      try {
-			        await ensureNdrAuthorKey(true)
-			      } catch (error) {
-			        console.warn("init ndrAuthorKey failed:", error)
-			      }
+		      logger.info("登录成功", { user: form.user, apiBase: form.apiBase || "/api" })
 		      ElMessage.success("登录成功")
-	      router.push("/workbench")
+		      const redirect = typeof route.query.redirect === "string" ? route.query.redirect : ""
+		      await router.replace(redirect && redirect !== "/login" ? redirect : HOME_PATH)
 
 	    } else {
+      logger.error("登录失败", { user: form.user, response: res })
       ElMessage.error(res.msg || "登录失败")
 
     }
 
   } catch (e) {
 
-    console.error(e)
+    const error = e || {}
+    const responseData = error?.responseData || error?.response?.data
+    logger.error("登录异常", {
+      user: form.user,
+      code: responseData?.code ?? error?.code,
+      message: responseData?.msg || responseData?.message || error?.message,
+      data: responseData?.data
+    })
+    ElMessage.error(String(responseData?.msg || responseData?.message || error?.message || "登录失败"))
 
   } finally {
 
@@ -178,7 +185,6 @@ const renderCaptcha = (text) => {
 
 onMounted(() => {
 
-	  if (authStore.isLoggedIn) router.push("/workbench")
 
 })
 	</script>
@@ -187,19 +193,24 @@ onMounted(() => {
 
 .login-container{
   width:100%;
-  height:100%;
+  flex:1;
+  min-height:100%;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:#f5f7fa;
+  padding:24px;
+  box-sizing:border-box;
+  background:var(--c-bg);
 }
 
 .login-box{
-  width:420px;
+  width:100%;
+  max-width:420px;
   padding:40px;
-  background:#fff;
+  background:var(--c-bg-card);
+  border:1px solid var(--c-border);
   border-radius:10px;
-  box-shadow:0 8px 30px rgba(0,0,0,0.1);
+  box-shadow:var(--shadow-xl);
 }
 
 .logo-area{
@@ -213,7 +224,7 @@ onMounted(() => {
 
 .title{
   margin-top:10px;
-  color:#7851a9;
+  color:var(--c-primary);
 }
 
 .login-btn{
@@ -232,7 +243,7 @@ onMounted(() => {
   width:100%;
   text-align:center;
   font-size:12px;
-  color:#888;
+  color:var(--c-text-muted);
 }
 
 </style>

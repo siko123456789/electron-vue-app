@@ -1,0 +1,706 @@
+/*
+ * ================================================================
+ * Element Plus 输入框与选择器覆盖规范
+ * ================================================================
+ * EP2 边框/背景在 .el-input__wrapper / .el-select__wrapper 上，
+ * .el-input__inner 仅为无边框的 input 元素，不可再单独加 border。
+ */
+
+.el-input {
+  --el-input-height: 32px;
+  font-size: var(--fs-sm);
+}
+
+.el-input__wrapper {
+  min-height: 32px;
+  padding: 1px 11px;
+  background-color: var(--c-bg-input);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--c-border-strong) inset;
+}
+
+.el-input__wrapper.is-focus,
+.el-input.is-active .el-input__wrapper {
+  box-shadow: 0 0 0 1px var(--c-primary) inset;
+}
+
+.el-input__inner {
+  height: var(--el-input-inner-height);
+  padding: 0;
+  color: var(--c-text);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  font-size: var(--fs-sm);
+  line-height: var(--el-input-inner-height);
+  box-shadow: none;
+}
+
+.el-input__inner::placeholder {
+  color: var(--c-text-muted);
+}
+
+.el-input__inner:hover,
+.el-input__inner:focus {
+  border: none;
+  box-shadow: none;
+  outline: none;
+}
+
+.el-input__prefix,
+.el-input__suffix {
+  color: var(--c-text-muted);
+}
+
+.el-input__icon {
+  color: var(--c-text-muted);
+}
+
+.el-input.is-disabled .el-input__wrapper {
+  background: var(--c-bg-hover);
+  box-shadow: 0 0 0 1px var(--c-border-light) inset;
+  cursor: not-allowed;
+}
+
+.el-input.is-disabled .el-input__inner {
+  color: var(--c-text-muted);
+  cursor: not-allowed;
+}
+
+.el-select {
+  font-size: var(--fs-sm);
+}
+
+.el-select__wrapper {
+  --el-fill-color-blank: var(--c-bg-input);
+  --el-text-color-regular: var(--c-text);
+  --el-text-color-placeholder: var(--c-text-muted);
+  --el-disabled-bg-color: color-mix(in srgb, var(--c-bg-input) 72%, var(--c-bg));
+  --el-disabled-text-color: var(--c-text-muted);
+  --el-disabled-border-color: var(--c-border-light);
+  min-height: 32px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--c-text);
+  background-color: var(--c-bg-input);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.el-select__wrapper.is-hovering:not(.is-focused) {
+  box-shadow: 0 0 0 1px var(--c-border-strong) inset;
+}
+
+.el-select__wrapper.is-focused {
+  box-shadow: 0 0 0 1px var(--c-primary) inset;
+}
+
+/* 禁用态：覆盖 EP 默认白底，适配深/浅色 */
+.el-select__wrapper.is-disabled,
+.el-select.is-disabled .el-select__wrapper {
+  background-color: color-mix(in srgb, var(--c-bg-input) 72%, var(--c-bg)) !important;
+  box-shadow: 0 0 0 1px var(--c-border-light) inset !important;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.el-select__wrapper.is-disabled .el-select__selected-item,
+.el-select__wrapper.is-disabled .el-select__placeholder,
+.el-select__wrapper.is-disabled .el-select__input,
+.el-select__wrapper.is-disabled .el-select__caret,
+.el-select.is-disabled .el-select__selected-item,
+.el-select.is-disabled .el-select__placeholder,
+.el-select.is-disabled .el-select__caret {
+  color: var(--c-text-muted) !important;
+  -webkit-text-fill-color: var(--c-text-muted);
+}
+
+.el-select__caret {
+  color: var(--c-text-muted);
+}
+
+.el-select-dropdown {
+  color: var(--c-text-secondary);
+  background: var(--c-bg-card) !important;
+  border-color: var(--c-border) !important;
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+/* 下拉挂到 body：同步覆盖 popper 容器与 EP 变量，避免深色下白底/白边 */
+.el-select__popper.el-popper,
+.el-popper.el-select__popper {
+  --el-bg-color-overlay: var(--c-bg-card);
+  --el-border-color-light: var(--c-border);
+  --el-fill-color-light: var(--c-bg-hover);
+  --el-fill-color-blank: var(--c-bg-card);
+  --el-text-color-regular: var(--c-text-secondary);
+  --el-color-primary: var(--c-primary);
+  background: var(--c-bg-card) !important;
+  border: 1px solid var(--c-border) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.el-select__popper.el-popper .el-popper__arrow::before,
+.el-popper.el-select__popper .el-popper__arrow::before {
+  background: var(--c-bg-card) !important;
+  border: 1px solid var(--c-border) !important;
+}
+
+.el-select-dropdown__item {
+  color: var(--c-text-secondary);
+  font-size: 12px;
+  background: transparent !important;
+}
+
+/* EP2 用 is-hovering / is-selected；旧版 .hover / .selected 一并兼容 */
+.el-select-dropdown__item.hover,
+.el-select-dropdown__item.is-hovering,
+.el-select-dropdown__item:hover {
+  color: var(--c-text) !important;
+  background: var(--c-bg-hover) !important;
+}
+
+.el-select-dropdown__item.selected,
+.el-select-dropdown__item.is-selected {
+  color: var(--c-primary-light) !important;
+  font-weight: var(--fw-semibold) !important;
+  background: var(--c-primary-bg) !important;
+}
+
+.el-select-dropdown__item.is-selected.is-hovering,
+.el-select-dropdown__item.selected.hover {
+  color: var(--c-primary-light) !important;
+  background: var(--c-primary-bg) !important;
+}
+
+.el-select-dropdown__item.is-disabled,
+.el-select-dropdown__item.is-disabled:hover,
+.el-select-dropdown__item.is-disabled.is-hovering {
+  color: var(--c-text-muted);
+  background: transparent !important;
+  opacity: 0.55;
+}
+
+.el-select-dropdown__empty {
+  color: var(--c-text-muted);
+}
+
+/* 多选 Select 内部标签，覆盖 Element UI 默认蓝色，并控制单行高度 */
+.el-select .el-tag {
+  height: 20px;
+  margin: 5px 0 5px 6px;
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--c-primary-light);
+  background: var(--c-primary-bg);
+  border-color: var(--c-border-strong);
+  line-height: 18px;
+}
+
+.el-select .el-tag .el-tag__close {
+  color: var(--c-primary-light);
+  background: transparent;
+}
+
+.el-select .el-tag .el-tag__close:hover {
+  color: var(--c-text-on-primary);
+  background: var(--c-primary);
+}
+
+/* Textarea 与 Input 共用同一套主题焦点色。 */
+.el-textarea__inner {
+  color: var(--c-text);
+  background: var(--c-table-head);
+  border-color: var(--c-border);
+  border-radius: var(--r-lg);
+}
+
+.el-textarea__inner::placeholder {
+  color: var(--c-text-muted);
+}
+
+.el-textarea__inner:hover {
+  border-color: var(--c-border-strong);
+}
+
+.el-textarea__inner:focus {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 2px var(--c-primary-bg);
+}
+
+/*
+ * el-input-number 数字输入框主题适配。
+ * 覆盖 Element UI 默认 #409EFF 边框与浅色加减按钮背景。
+ */
+.el-input-number {
+  line-height: 32px;
+}
+
+.el-input-number.is-active .el-input__wrapper,
+.el-input-number.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 1px var(--c-primary) inset;
+}
+
+.el-input-number__decrease:hover:not(.is-disabled)
+  ~ .el-input
+  .el-input__wrapper:not(.is-disabled),
+.el-input-number__increase:hover:not(.is-disabled)
+  ~ .el-input
+  .el-input__wrapper:not(.is-disabled) {
+  box-shadow: 0 0 0 1px var(--c-primary) inset !important;
+}
+
+.el-input-number:hover:not(.is-disabled):not(.is-focus)
+  .el-input__wrapper:not(.is-disabled) {
+  box-shadow: 0 0 0 1px var(--c-border-strong) inset;
+}
+
+.el-input-number__decrease,
+.el-input-number__increase {
+  color: var(--c-text-muted);
+  background: var(--c-bg-hover);
+  border-color: var(--c-border);
+}
+
+.el-input-number__decrease:hover:not(.is-disabled),
+.el-input-number__increase:hover:not(.is-disabled) {
+  color: var(--c-primary);
+  border-color: var(--c-border-strong);
+}
+
+.el-input-number__decrease.is-disabled,
+.el-input-number__increase.is-disabled {
+  color: var(--c-text-muted);
+  background: var(--c-table-head);
+}
+
+.el-input-number.is-controls-right .el-input-number__decrease,
+.el-input-number.is-controls-right .el-input-number__increase {
+  /* 输入框统一 32px 高时，右侧上下键各占一半，避免被 line-height:32px 撑坏 */
+  height: 15px;
+  line-height: 15px;
+  border-color: var(--c-border);
+}
+
+.el-input-number.is-controls-right .el-input-number__decrease {
+  top: auto;
+  bottom: 1px;
+  border-left: 1px solid var(--c-border);
+}
+
+.el-input-number.is-controls-right .el-input-number__increase {
+  top: 1px;
+  bottom: auto;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.el-input-number.is-controls-right .el-input__inner {
+  padding-right: 42px;
+}
+
+.el-input-number--small {
+  line-height: 32px;
+}
+
+.el-input-number--small .el-input__wrapper {
+  min-height: 32px;
+}
+
+/*
+ * Element UI 默认把箭头内层写死为 #FFF；这里同时覆盖边框层与填充层，
+ * 并覆盖上下两个弹出方向。
+ */
+.el-select-dropdown.el-popper[x-placement^='bottom'] .popper__arrow {
+  border-bottom-color: var(--c-border);
+}
+
+.el-select-dropdown.el-popper[x-placement^='bottom'] .popper__arrow::after {
+  border-bottom-color: var(--c-bg-card);
+}
+
+.el-select-dropdown.el-popper[x-placement^='top'] .popper__arrow {
+  border-top-color: var(--c-border);
+}
+
+.el-select-dropdown.el-popper[x-placement^='top'] .popper__arrow::after {
+  border-top-color: var(--c-bg-card);
+}
+
+/* Autocomplete 下拉层，与 Select 下拉保持同一套主题变量。 */
+.el-autocomplete-suggestion {
+  color: var(--c-text-secondary);
+  background: var(--c-bg-card);
+  border-color: var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.el-autocomplete-suggestion__wrap {
+  max-height: 280px;
+}
+
+.el-autocomplete-suggestion li {
+  color: var(--c-text-secondary);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+.el-autocomplete-suggestion li.highlighted,
+.el-autocomplete-suggestion li:hover {
+  color: var(--c-text);
+  background: var(--c-bg-hover);
+}
+
+.el-autocomplete-suggestion.is-loading li {
+  color: var(--c-text-muted);
+}
+
+.el-autocomplete-suggestion.el-popper[x-placement^='bottom'] .popper__arrow {
+  border-bottom-color: var(--c-border);
+}
+
+.el-autocomplete-suggestion.el-popper[x-placement^='bottom']
+  .popper__arrow::after {
+  border-bottom-color: var(--c-bg-card);
+}
+
+.el-autocomplete-suggestion.el-popper[x-placement^='top'] .popper__arrow {
+  border-top-color: var(--c-border);
+}
+
+.el-autocomplete-suggestion.el-popper[x-placement^='top']
+  .popper__arrow::after {
+  border-top-color: var(--c-bg-card);
+}
+
+/* Time Picker 弹出面板统一适配明暗主题。 */
+.el-time-panel {
+  color: var(--c-text-secondary);
+  background: var(--c-bg-card);
+  border-color: var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.el-time-panel__content::before,
+.el-time-panel__content::after {
+  border-color: var(--c-border-light);
+}
+
+.el-time-spinner__item {
+  color: var(--c-text-secondary);
+}
+
+.el-time-spinner__item:hover:not(.disabled):not(.active) {
+  color: var(--c-text);
+  background: var(--c-bg-hover);
+}
+
+.el-time-spinner__item.active:not(.disabled) {
+  color: var(--c-primary-light);
+  font-weight: var(--fw-semibold);
+}
+
+.el-time-spinner__item.disabled {
+  color: var(--c-text-muted);
+  opacity: 0.45;
+}
+
+.el-time-panel__footer {
+  background: var(--c-bg-card);
+  border-top-color: var(--c-border);
+}
+
+.el-time-panel__btn {
+  color: var(--c-text-muted);
+}
+
+.el-time-panel__btn:hover,
+.el-time-panel__btn.confirm {
+  color: var(--c-primary-light);
+}
+
+.el-time-panel.el-popper[x-placement^='bottom'] .popper__arrow {
+  border-bottom-color: var(--c-border);
+}
+
+.el-time-panel.el-popper[x-placement^='bottom'] .popper__arrow::after {
+  border-bottom-color: var(--c-bg-card);
+}
+
+.el-time-panel.el-popper[x-placement^='top'] .popper__arrow {
+  border-top-color: var(--c-border);
+}
+
+.el-time-panel.el-popper[x-placement^='top'] .popper__arrow::after {
+  border-top-color: var(--c-bg-card);
+}
+
+/*
+ * Date Picker / Date Range 输入框与弹出面板主题适配。
+ * 覆盖 Element UI 默认 #409EFF 边框、选中态与范围高亮。
+ */
+.el-date-editor {
+  font-size: var(--fs-sm);
+}
+
+.el-date-editor.el-input {
+  width: auto;
+}
+
+.el-date-editor.el-input .el-input__wrapper {
+  color: var(--c-text);
+  background-color: var(--c-bg-input);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+}
+
+.el-date-editor.el-input .el-input__prefix,
+.el-date-editor.el-input .el-input__suffix {
+  color: var(--c-text-muted);
+}
+
+.el-date-editor.el-input.is-active .el-input__wrapper,
+.el-date-editor.el-input .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px var(--c-primary) inset;
+}
+
+/* 日期范围输入框 */
+.el-range-editor.el-input__wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 1px 28px 1px 30px;
+  color: var(--c-text);
+  background-color: var(--c-bg-input);
+  border-radius: var(--r-lg);
+  box-shadow: 0 0 0 1px var(--c-border) inset;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.el-range-editor .el-range-input {
+  flex: 1;
+  width: 39%;
+  color: var(--c-text);
+  background: transparent;
+  font-size: var(--fs-sm);
+}
+
+.el-range-editor .el-range-input::placeholder {
+  color: var(--c-text-muted);
+}
+
+.el-range-editor .el-range-separator {
+  flex: none;
+  padding: 0 4px;
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+  line-height: 30px;
+}
+
+/* 重置全局 .el-input__icon 对范围选择器的干扰 */
+.el-range-editor .el-input__icon {
+  position: absolute;
+  top: 50%;
+  width: auto;
+  height: auto;
+  margin: 0;
+  float: none;
+  font-size: 14px;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.el-range-editor .el-range__icon {
+  left: 8px;
+  color: var(--c-text-muted);
+}
+
+.el-range-editor .el-range__close-icon {
+  right: 6px;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.el-range-editor .el-range__close-icon:hover {
+  color: var(--c-text-secondary);
+}
+
+/* 清除按钮使用简洁 ×，替代默认带圆圈图标 */
+.el-range-editor .el-range__close-icon.el-icon-circle-close::before {
+  content: '\e6db';
+}
+
+.el-range-editor.el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px var(--c-border-strong) inset;
+}
+
+.el-range-editor.el-input__wrapper.is-active,
+.el-range-editor.el-input__wrapper.is-active:hover {
+  box-shadow: 0 0 0 1px var(--c-primary) inset !important;
+}
+
+.el-range-editor.el-input__wrapper.is-disabled {
+  color: var(--c-text-muted);
+  background: var(--c-bg-hover);
+  box-shadow: 0 0 0 1px var(--c-border-light) inset;
+  cursor: not-allowed;
+}
+
+.el-range-editor.is-disabled .el-range-input {
+  color: var(--c-text-muted);
+}
+
+/* 日历弹出面板 */
+.el-picker-panel {
+  color: var(--c-text-secondary);
+  background: var(--c-bg-card);
+  border-color: var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.el-picker-panel__body-wrapper,
+.el-picker-panel__body {
+  background: var(--c-bg-card);
+}
+
+.el-picker-panel__footer {
+  background: var(--c-bg-card);
+  border-top-color: var(--c-border);
+}
+
+.el-picker-panel__shortcut {
+  color: var(--c-text-secondary);
+}
+
+.el-picker-panel__shortcut:hover {
+  color: var(--c-primary-light);
+}
+
+.el-picker-panel__icon-btn {
+  color: var(--c-text-muted);
+}
+
+.el-picker-panel__icon-btn:hover {
+  color: var(--c-primary-light);
+}
+
+.el-date-picker__header-label {
+  color: var(--c-text);
+}
+
+.el-date-picker__header-label.active,
+.el-date-picker__header-label:hover {
+  color: var(--c-primary-light);
+}
+
+.el-date-table th {
+  color: var(--c-text-muted);
+  border-bottom-color: var(--c-border-light);
+  font-weight: var(--fw-medium);
+}
+
+.el-date-table td {
+  color: var(--c-text-secondary);
+}
+
+.el-date-table td.next-month,
+.el-date-table td.prev-month {
+  color: var(--c-text-muted);
+}
+
+.el-date-table td.available:hover {
+  color: var(--c-primary-light);
+}
+
+.el-date-table td.today span {
+  color: var(--c-primary);
+  font-weight: var(--fw-semibold);
+}
+
+.el-date-table td.today.end-date span,
+.el-date-table td.today.start-date span {
+  color: var(--c-text-on-primary);
+}
+
+.el-date-table td.current:not(.disabled) span {
+  color: var(--c-text-on-primary) !important;
+  background-color: var(--c-primary) !important;
+}
+
+.el-date-table td.selected span {
+  color: var(--c-text-on-primary) !important;
+  background-color: var(--c-primary) !important;
+}
+
+.el-date-table td.in-range div,
+.el-date-table td.in-range div:hover {
+  background-color: var(--c-primary-bg) !important;
+}
+
+.el-date-table td.start-date div,
+.el-date-table td.end-date div {
+  background-color: var(--c-primary-bg) !important;
+}
+
+.el-date-table td.start-date span,
+.el-date-table td.end-date span {
+  color: var(--c-text-on-primary) !important;
+  background-color: var(--c-primary) !important;
+}
+
+.el-date-table td.disabled div {
+  color: var(--c-text-muted);
+  background-color: transparent;
+  opacity: 0.45;
+}
+
+.el-picker-panel__link-btn {
+  color: var(--c-primary-light);
+}
+
+.el-picker-panel__btn {
+  color: var(--c-text-muted);
+  background: transparent;
+  border-color: var(--c-border);
+}
+
+.el-picker-panel__btn:hover {
+  color: var(--c-primary-light);
+}
+
+.el-picker-panel__btn.is-plain {
+  color: var(--c-primary-light);
+  border-color: var(--c-primary);
+}
+
+.el-picker-panel__btn.is-plain:hover {
+  color: var(--c-text-on-primary);
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+.el-picker-panel.el-popper[x-placement^='bottom'] .popper__arrow {
+  border-bottom-color: var(--c-border);
+}
+
+.el-picker-panel.el-popper[x-placement^='bottom'] .popper__arrow::after {
+  border-bottom-color: var(--c-bg-card);
+}
+
+.el-picker-panel.el-popper[x-placement^='top'] .popper__arrow {
+  border-top-color: var(--c-border);
+}
+
+.el-picker-panel.el-popper[x-placement^='top'] .popper__arrow::after {
+  border-top-color: var(--c-bg-card);
+}

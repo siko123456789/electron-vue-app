@@ -1,0 +1,101 @@
+/*
+ * ================================================================
+ * Element UI Tag 主题适配
+ * ================================================================
+ * 覆盖 Element UI 默认浅色 Tag，统一映射到 --c-* 语义色。
+ */
+
+.el-tag {
+  color: var(--c-text-secondary);
+  background-color: var(--c-neutral-bg);
+  border-color: var(--c-border-strong);
+}
+
+.el-tag .el-tag__close {
+  color: var(--c-text-muted);
+
+  &:hover {
+    color: var(--c-text);
+    background-color: var(--c-bg-hover);
+  }
+}
+
+/* success */
+.el-tag.el-tag--success {
+  color: var(--c-success);
+  background-color: var(--c-success-bg);
+  border-color: rgba(52, 211, 153, 0.28);
+}
+
+.el-tag.el-tag--success.is-hit {
+  border-color: var(--c-success);
+}
+
+.el-tag.el-tag--plain.el-tag--success {
+  color: var(--c-success);
+  background-color: var(--c-success-bg);
+  border-color: rgba(52, 211, 153, 0.28);
+}
+
+.el-tag.el-tag--light.el-tag--success {
+  color: var(--c-success);
+  background-color: var(--c-success-bg);
+  border-color: transparent;
+}
+
+/* warning */
+.el-tag.el-tag--warning {
+  color: var(--c-warn);
+  background-color: var(--c-warn-bg);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.el-tag.el-tag--plain.el-tag--warning {
+  color: var(--c-warn);
+  background-color: var(--c-warn-bg);
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+.el-tag.el-tag--light.el-tag--warning {
+  color: var(--c-warn);
+  background-color: var(--c-warn-bg);
+  border-color: transparent;
+}
+
+/* info */
+.el-tag.el-tag--info {
+  color: var(--c-text-muted);
+  background-color: var(--c-neutral-bg);
+  border-color: var(--c-border-strong);
+}
+
+.el-tag.el-tag--plain.el-tag--info {
+  color: var(--c-text-muted);
+  background-color: transparent;
+  border-color: var(--c-border-strong);
+}
+
+.el-tag.el-tag--light.el-tag--info {
+  color: var(--c-text-muted);
+  background-color: var(--c-neutral-bg);
+  border-color: transparent;
+}
+
+/* danger */
+.el-tag.el-tag--danger {
+  color: var(--c-danger);
+  background-color: var(--c-danger-bg);
+  border-color: rgba(248, 113, 113, 0.28);
+}
+
+.el-tag.el-tag--plain.el-tag--danger {
+  color: var(--c-danger);
+  background-color: var(--c-danger-bg);
+  border-color: rgba(248, 113, 113, 0.28);
+}
+
+.el-tag.el-tag--light.el-tag--danger {
+  color: var(--c-danger);
+  background-color: var(--c-danger-bg);
+  border-color: transparent;
+}

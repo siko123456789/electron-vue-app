@@ -1,0 +1,26 @@
+/* 全局设计令牌（暗色默认，html[data-theme='light'] 为浅色） */
+@import './theme.scss';
+
+/* 公共工具类 */
+@import './pubulicStyle.scss';
+
+/* Element Plus 组件主题覆盖（顺序：基础 → 表单 → 反馈 → 业务） */
+@import './scrollbar.scss';
+@import './button.scss';
+@import './input.scss';
+@import './form.scss';
+@import './radio.scss';
+@import './checkbox.scss';
+@import './card.scss';
+@import './table.scss';
+@import './dialog.scss';
+@import './form-dialog.scss';
+@import './dropdown.scss';
+@import './pagination.scss';
+@import './tag.scss';
+@import './tooltip.scss';
+@import './popover.scss';
+@import './notification.scss';
+@import './message-box.scss';
+@import './loading.scss';
+@import './filter.scss';

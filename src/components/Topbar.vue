@@ -1,628 +1,449 @@
 <template>
-  <div class="topbar-wrap">
-    <header class="topbar">
-      <div class="left">
-        <div class="brand" @click="router.push('/workbench')">
-          <div class="logo">
-            <el-icon>
-              <Lock />
-            </el-icon>
-          </div>
-          <div class="brand-text">
-            <div class="brand-title">风险治理</div>
-            <div class="brand-sub">Sentinel</div>
-          </div>
-        </div>
+  <header class="topbar" @dblclick="handleDoubleClick">
+    <div class="brand" role="link" tabindex="0" @click="goHome" @keydown.enter="goHome">
+      <img :src="logoSrc" alt="风险治理系统" @error="handleLogoError" />
+      <div>
+        <strong>风险治理系统</strong>
+        <span>Sentinel</span>
       </div>
+    </div>
 
-      <div v-if="authStore.isLoggedIn" class="center">
-        <div class="menu-scroller">
-          <el-menu
-            mode="horizontal"
-            :default-active="activeMenu"
-            :ellipsis="false"
-            class="top-nav-menu"
-            router
-          >
-            <el-menu-item index="/workbench">
-              <el-icon>
-                <House />
-              </el-icon>
-              <span>工作台</span>
-            </el-menu-item>
-            <!-- <el-menu-item index="/attack-surface">
-              <el-icon>
-                <Aim />
-              </el-icon>
-              <span>攻击面治理</span>
-            </el-menu-item>
-            <el-menu-item index="/threat-assessment">
-              <el-icon>
-                <Warning />
-              </el-icon>
-              <span>威胁评估</span>
-            </el-menu-item>-->
-            <el-menu-item index="/events">
-              <el-icon>
-                <Memo />
-              </el-icon>
-              <span>事件响应</span>
-            </el-menu-item>
-            <!-- <el-menu-item index="/operation">
-              <el-icon>
-                <Document />
-              </el-icon>
-              <span>策略整改</span>
-            </el-menu-item>
-            <el-menu-item index="/settings">
-              <el-icon>
-                <Setting />
-              </el-icon>
-              <span>设置</span>
-            </el-menu-item>-->
-          </el-menu>
-        </div>
-      </div>
-
-      <div v-if="authStore.isLoggedIn" class="right">
-        <el-button class="icon-btn" text @click="openDrawer">
-          <el-badge
-            :value="alerts.unreadCount"
-            :hidden="alerts.unreadCount === 0"
-            class="badge"
-            type="danger"
-          >
-            <el-icon>
-              <Bell />
-            </el-icon>
-          </el-badge>
-        </el-button>
-        <!-- <div class="divider" />
-        <el-button class="help" text>
-          帮助文档
-          <el-icon class="help-icon">
-            <QuestionFilled />
-          </el-icon>
-        </el-button>-->
-        <div class="divider" />
-        <el-dropdown @command="handleUserCommand" placement="bottom-end">
-          <el-button class="user-menu-btn" text>
-            <el-icon style="color:#333;font-size: 16px;">
-              <User />
-            </el-icon>
-          </el-button>
-          <template #dropdown>
-            <div style="min-width:150px;">
-              <el-dropdown-menu>
-                <!-- 用户信息区域 -->
-                <div class="user-info-dropdown">
-                  <div class="user-info-header">
-                    <div class="user-avatar">{{ avatarText }}</div>
-                    <div class="user-info">
-                      <div class="username">{{ username }}</div>
-                      <div class="role">{{ roleName }}</div>
-                    </div>
-                  </div>
-                </div>
-                <el-dropdown-item command="settings">
-                  <el-icon style="margin-right: 6px">
-                    <Setting />
-                  </el-icon>设置
-                </el-dropdown-item>
-                <el-dropdown-item command="lock" :disabled="!settingsStore.hasLockPassword">
-                  <el-icon style="margin-right: 6px">
-                    <Lock />
-                  </el-icon>锁定应用
-                </el-dropdown-item>
-                <el-dropdown-item command="logout">
-                  <el-icon style="margin-right: 6px">
-                    <SwitchButton />
-                  </el-icon>退出登录
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </div>
-          </template>
-        </el-dropdown>
-      </div>
-    </header>
-
-    <el-drawer v-if="authStore.isLoggedIn" v-model="drawerOpen" title="消息中心" size="50%">
-      <div class="drawer-actions">
-        <el-button size="small" @click="alerts.markAllRead()">全部已读</el-button>
-        <el-button size="small" type="danger" plain @click="alerts.clearAll()">清空</el-button>
-        <el-button size="small" type="primary" plain @click="demoRisk">测试告警</el-button>
-        <el-button size="small" type="success" plain @click="startAutoTest">自动测试(1分钟)</el-button>
-        <el-button size="small" plain @click="stopAutoTest">停止自动测试</el-button>
-      </div>
-
-      <div v-if="alerts.items.length === 0" class="drawer-empty">
-        <el-empty description="暂无消息" />
-      </div>
-
-      <div v-else class="drawer-list">
-        <div
-          v-for="item in alerts.items"
-          :key="item.id"
-          class="drawer-item"
-          :class="{ unread: !item.read, [item.variant]: true }"
-          @click="alerts.markRead(item.id)"
+    <div class="topbar-center">
+      <div
+        v-if="showNotifyReconnect"
+        class="notify-conn"
+        :class="{ 'is-gave-up': notifyRealtime.gaveUp, 'is-retrying': isNotifyRetrying }"
+        role="status"
+      >
+        <span class="notify-conn__dot" aria-hidden="true" />
+        <span class="notify-conn__text">{{ notifyStatusText }}</span>
+        <button
+          class="notify-conn__btn"
+          type="button"
+          :disabled="retryLoading"
+          @click="handleRetryNotify"
         >
-          <div class="it-head">
-            <div class="it-title">{{ item.title }}</div>
-            <div class="it-time">{{ formatTime(item.ts) }}</div>
-          </div>
-          <div class="it-msg">{{ item.message || '请立即关注并处理。' }}</div>
-        </div>
+          {{ retryLoading ? '连接中…' : '重新连接' }}
+        </button>
       </div>
-    </el-drawer>
-  </div>
+    </div>
+
+    <div class="topbar-actions">
+      <div class="topbar-tools" role="toolbar" aria-label="快捷操作">
+        <button
+          class="tool-btn"
+          type="button"
+          :aria-label="themeLabel"
+          :title="themeLabel"
+          @click="settingsStore.toggleColorTheme()"
+        >
+          <el-icon>
+            <Moon v-if="settingsStore.colorTheme === 'dark'" />
+            <Sunny v-else />
+          </el-icon>
+        </button>
+
+        <button
+          class="tool-btn"
+          type="button"
+          aria-label="锁定应用"
+          title="锁定应用"
+          :disabled="!settingsStore.hasLockPassword"
+          @click="lockApp"
+        >
+          <el-icon><Lock /></el-icon>
+        </button>
+
+        <button
+          class="tool-btn"
+          type="button"
+          :class="{ 'is-active': isSettingsPage }"
+          :aria-label="isSettingsPage ? '返回风险监测' : '设置'"
+          :title="isSettingsPage ? '返回风险监测' : '设置'"
+          @click="toggleSettings"
+        >
+          <el-icon><Setting /></el-icon>
+        </button>
+
+        <button
+          class="tool-btn tool-btn--danger"
+          type="button"
+          aria-label="退出登录"
+          title="退出登录"
+          :disabled="logoutLoading"
+          @click="handleLogout"
+        >
+          <el-icon><SwitchButton /></el-icon>
+        </button>
+      </div>
+
+      <span v-if="framelessWindow" class="topbar-divider" aria-hidden="true" />
+      <WindowControls v-if="framelessWindow" />
+    </div>
+  </header>
 </template>
 
 <script setup lang="ts">
-	import { computed, ref } from "vue";
-	import { useAlertsStore } from "@/stores/alerts";
-	import { useAuthStore } from "@/stores/auth";
-	import { useSettingsStore } from "@/stores/settings";
-	import type { UserInfo } from "@/stores/auth";
-	import { ElMessage, ElMessageBox } from "element-plus";
-import { useRouter, useRoute } from "vue-router";
-import { logout } from "@/api/login";
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Lock, Moon, Setting, Sunny, SwitchButton } from '@element-plus/icons-vue'
+import { logout } from '@/api/login'
+import { useAuthStore } from '@/stores/auth'
+import { useNotifyRealtimeStore } from '@/stores/notifyRealtime'
+import { useSettingsStore } from '@/stores/settings'
+import { HOME_PATH } from '@/router'
+import { clearApiCache, clearOfflineQueue } from '@/utils/request'
+import { retryNotifyRealtime } from '@/utils/notifyWebSocket'
+import WindowControls from '@/components/WindowControls.vue'
 
-const alerts = useAlertsStore();
-const drawerOpen = ref(false);
-const authStore = useAuthStore();
-const settingsStore = useSettingsStore();
-const router = useRouter();
-const route = useRoute();
+const router = useRouter()
+const route = useRoute()
+const authStore = useAuthStore()
+const settingsStore = useSettingsStore()
+const notifyRealtime = useNotifyRealtimeStore()
+const logoSrc = `${import.meta.env.BASE_URL}lanhu_logo.ico`
+const framelessWindow = ref(Boolean(window.ipcRenderer?.invoke))
+const logoutLoading = ref(false)
+const retryLoading = ref(false)
 
-const activeMenu = computed(() => route.path);
+const isSettingsPage = computed(() => route.path === '/settings')
+const themeLabel = computed(() =>
+  settingsStore.colorTheme === 'dark' ? '切换浅色模式' : '切换深色模式',
+)
 
-// 用户信息计算属性
-const pickFirstString = (candidates: any[]) => {
-  for (const value of candidates) {
-    if (typeof value === "string" && value.trim()) return value.trim();
+/** 放弃重连，或正在自动重试时：顶栏露出手动重连 */
+const showNotifyReconnect = computed(() => {
+  if (!authStore.isLoggedIn) return false
+  if (notifyRealtime.gaveUp) return true
+  if (!notifyRealtime.connected && notifyRealtime.reconnectAttempt > 0) return true
+  return false
+})
+
+const isNotifyRetrying = computed(
+  () =>
+    !notifyRealtime.connected &&
+    !notifyRealtime.gaveUp &&
+    notifyRealtime.reconnectAttempt > 0,
+)
+
+const notifyStatusText = computed(() => {
+  if (notifyRealtime.gaveUp) {
+    return notifyRealtime.lastStatusMsg || '实时通知已断开'
   }
-  return "";
-};
+  const cur = notifyRealtime.reconnectAttempt
+  const max = notifyRealtime.maxReconnectAttempts || 5
+  return `实时通知重连中 ${cur}/${max}`
+})
 
-const username = computed(() => {
-  const info = (authStore.userInfo ?? {}) as UserInfo;
-  return (
-    pickFirstString([
-      info.username,
-      info.userName,
-      info.name,
-      info.realName,
-      info.user?.username,
-      info.user?.name,
-      info.profile?.username
-    ]) || "用户"
-  );
-});
-
-const roleName = computed(() => {
-  const info = (authStore.userInfo ?? {}) as UserInfo;
-  return pickFirstString([
-    info.role_name,
-    info.roleName,
-    info.role?.name,
-    info.user?.role_name,
-    info.user?.roleName
-  ]);
-});
-
-const avatarText = computed(() => {
-  const text = username.value || "用户";
-  return text.length >= 2 ? text.slice(0, 2) : text.slice(0, 1);
-});
-
-function openDrawer() {
-  drawerOpen.value = true;
-}
-
-function formatTime(ts: number) {
+async function handleRetryNotify() {
+  if (retryLoading.value) return
+  retryLoading.value = true
   try {
-    return new Date(ts).toLocaleString();
-  } catch {
-    return "";
+    await retryNotifyRealtime()
+    ElMessage.success('正在重新连接通知服务…')
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : '重新连接失败')
+  } finally {
+    window.setTimeout(() => {
+      retryLoading.value = false
+    }, 800)
   }
 }
 
-function demoRisk() {
-  window.ipcRenderer.invoke("app/show-alert", {
-    variant: "risk",
-    title: "高危告警",
-    message: "发现高危漏洞",
-    sound: true
-  });
+function handleLogoError(event: Event) {
+  const target = event.target as HTMLImageElement
+  target.style.visibility = 'hidden'
 }
 
-function startAutoTest() {
+function goHome() {
+  if (route.path !== HOME_PATH) {
+    void router.push(HOME_PATH)
+  }
+}
+
+/** 设置按钮切换：设置页 ↔ 风险监测 */
+function toggleSettings() {
+  if (route.path === '/settings') {
+    void router.push(HOME_PATH)
+    return
+  }
+  void router.push('/settings')
+}
+
+function lockApp() {
+  if (!settingsStore.hasLockPassword) {
+    ElMessage.warning('当前未设置应用锁密码')
+    return
+  }
+  settingsStore.lockApp()
+  ElMessage.success('应用已锁定')
+}
+
+async function handleLogout() {
+  if (logoutLoading.value) return
+  logoutLoading.value = true
   try {
-    void window.ipcRenderer.invoke("app/test-alerts/set-enabled", true);
-    ElMessage.success("已开启自动测试（每分钟，窗口隐藏时弹出）");
-  } catch {
-    ElMessage.error("开启自动测试失败");
-  }
-}
-
-function stopAutoTest() {
-  try {
-    void window.ipcRenderer.invoke("app/test-alerts/set-enabled", false);
-    ElMessage.success("已停止自动测试");
-  } catch {
-    ElMessage.error("停止自动测试失败");
-  }
-}
-
-// 处理用户菜单命令
-const handleUserCommand = async (command: string) => {
-  if (command === "settings") {
-    router.push("/settings");
-  } else if (command === "lock") {
-    if (!settingsStore.hasLockPassword) {
-      ElMessage.warning("请先在设置中启用应用锁");
-      return;
-    }
-    drawerOpen.value = false;
-    settingsStore.lockApp();
-    ElMessage.success("应用已锁定");
-  } else if (command === "logout") {
     try {
-      // 显示确认对话框
-      await ElMessageBox.confirm("确定要退出登录吗？", "退出登录", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      });
-
-      try {
-        // 调用退出登录接口（失败也允许本地退出，避免卡死）
-        await logout();
-      } catch (e) {
-        console.warn("退出登录接口失败（已继续本地退出）:", e);
-        ElMessage.warning("服务器退出失败，已本地退出");
-      } finally {
-        authStore.clearAuth();
-        router.push("/login");
-        ElMessage.success("退出登录成功");
-      }
-    } catch (error) {
-      // 用户取消退出
-      if (error !== "cancel") {
-        console.error("退出登录失败:", error);
-        ElMessage.error("退出登录失败");
-      }
+      await logout()
+    } catch {
+      // 接口失败也继续本地退出，方便联调登录
     }
+    authStore.clearAuth()
+    settingsStore.unlockApp()
+    clearApiCache()
+    clearOfflineQueue()
+    try {
+      localStorage.removeItem('ipc_cookie_v1')
+    } catch {
+      // ignore
+    }
+    ElMessage.success('已退出登录')
+    await router.replace('/login')
+  } finally {
+    logoutLoading.value = false
   }
-};
+}
+
+function handleDoubleClick(event: MouseEvent) {
+  if (!framelessWindow.value) return
+  const target = event.target
+  if (
+    !(target instanceof HTMLElement) ||
+    target.closest('button, .window-controls, .brand, .notify-conn')
+  ) {
+    return
+  }
+  void window.ipcRenderer?.invoke('window/maximize-toggle')
+}
+
+onMounted(async () => {
+  if (!window.ipcRenderer?.invoke) {
+    framelessWindow.value = false
+    return
+  }
+
+  try {
+    framelessWindow.value = Boolean(
+      await window.ipcRenderer.invoke('app/use-frameless-window'),
+    )
+  } catch {
+    framelessWindow.value = false
+  }
+})
 </script>
 
-<style scoped>
-.topbar-wrap {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
+<style scoped lang="scss">
 .topbar {
-  height: 64px;
-  padding: 0 14px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.96),
-    rgba(255, 255, 255, 0.9)
-  );
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(10px);
+  gap: 12px;
+  height: 56px;
+  padding: 0 16px 0 20px;
+  color: var(--c-text);
+  background: var(--shell-bg);
+  border-bottom: 1px solid var(--c-border);
+  -webkit-app-region: drag;
 }
 
-.left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
+.brand,
+.topbar-actions,
+.topbar-center,
+.tool-btn,
+.notify-conn {
+  -webkit-app-region: no-drag;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 14px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.15s ease;
-}
-
-.brand:hover {
-  background: color-mix(in srgb, var(--el-color-primary) 5%, #fff);
-}
-
-.logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  background: linear-gradient(135deg, #9810fa, #4f46e5);
-  box-shadow: 0 10px 18px rgba(79, 70, 229, 0.18);
-}
-
-.brand-text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  line-height: 1.05;
-}
-
-.brand-title {
-  font-weight: 900;
-  color: var(--app-text);
-  letter-spacing: 0.2px;
-}
-
-.brand-sub {
-  margin-top: 2px;
-  font-size: 11px;
-  color: var(--app-muted);
-}
-
-.center {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8px;
-}
-
-.menu-scroller {
-  width: 100%;
-  max-width: 980px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-}
-
-.menu-scroller::-webkit-scrollbar {
-  display: none;
-}
-
-.top-nav-menu {
-  border-bottom: none;
-  background: transparent;
-  width: max-content;
-  min-width: 100%;
-  display: flex;
-  align-items: center;
-  /* --el-menu-bg-color: transparent;
-  --el-menu-hover-bg-color: color-mix(in srgb, var(--el-color-primary) 10%, #fff);
-  --el-menu-text-color: var(--app-muted);
-  --el-menu-hover-text-color: var(--app-text);
-  --el-menu-active-color: #4f46e5;
-  --el-menu-border-color: transparent; */
-}
-
-.top-nav-menu :deep(.el-menu-item) {
-  height: 44px;
-  margin: 0 6px;
-  border-radius: 14px;
-  border-bottom: none !important;
-  color: var(--app-muted);
-  font-weight: 600;
-  transition: all 0.15s ease;
-}
-:deep(.el-menu) {
-  border-bottom: none !important;
-}
-.top-nav-menu :deep(.el-menu-item:hover) {
-  background: color-mix(in srgb, var(--el-color-primary) 5%, #fff) !important;
-  color: var(--app-text);
-}
-
-.top-nav-menu :deep(.el-menu-item.is-active) {
-  color: #4f46e5;
-  background: color-mix(in srgb, var(--el-color-primary) 5%, #fff) !important;
-}
-
-.top-nav-menu :deep(.el-menu-item.is-active:hover) {
-  background: color-mix(in srgb, var(--el-color-primary) 5%, #fff) !important;
-  color: #4f46e5;
-}
-
-.top-nav-menu :deep(.el-menu-item .el-icon) {
-  margin-right: 6px;
-  color: inherit;
-}
-
-.right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--app-muted);
-}
-
-.icon-btn {
-  height: 34px;
-  border-radius: 12px;
-  padding: 0 12px;
-  color: var(--app-muted);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: all 0.15s ease;
-}
-
-.icon-btn:hover {
-  color: var(--app-text);
-  border-color: rgba(79, 70, 229, 0.25);
-  background: rgba(79, 70, 229, 0.08);
-}
-
-.icon-btn :deep(.el-icon) {
-  font-size: 18px;
-  color: inherit;
-}
-
-.divider {
-  width: 1px;
-  height: 18px;
-  background: var(--app-border);
-}
-
-.help {
-  height: 34px;
-  border-radius: 12px;
-  padding: 0 12px;
-  color: var(--app-muted);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: all 0.15s ease;
-}
-
-.help:hover {
-  color: var(--app-text);
-  border-color: rgba(79, 70, 229, 0.25);
-  background: rgba(79, 70, 229, 0.08);
-}
-
-.help-icon {
-  margin-left: 6px;
-  color: inherit;
-}
-
-.badge :deep(.el-badge__content) {
-  transform: translate(6px, -6px);
-}
-
-.user-menu-btn {
-  height: 34px;
-  border-radius: 12px;
-  padding: 0 12px;
-  color: var(--app-muted);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.user-menu-btn :deep(.el-icon) {
-  color: inherit;
-}
-
-.user-menu-btn:hover {
-  color: var(--app-text);
-  border-color: rgba(79, 70, 229, 0.25);
-  background: rgba(79, 70, 229, 0.08);
-}
-
-/* 用户信息下拉菜单样式 */
-.user-info-dropdown {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--app-border);
-  margin-bottom: 8px;
-}
-
-.user-info-header {
-  display: flex;
-  align-items: center;
   gap: 12px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  outline: none;
 }
 
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--app-purple);
-  background: var(--app-purple-soft);
+.brand:hover strong {
+  color: var(--c-primary);
 }
 
-.user-info {
-  min-width: 0;
+.brand img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.brand div {
   display: flex;
   flex-direction: column;
+  gap: 1px;
+}
+
+.brand strong {
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  transition: color 0.15s ease;
+}
+
+.brand span {
+  color: var(--c-text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.topbar-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.notify-conn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 4px 6px 4px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--c-warn) 45%, var(--c-border));
+  background: color-mix(in srgb, var(--c-warn-bg, #fff7e6) 92%, transparent);
+  color: var(--c-warn);
+}
+
+.notify-conn.is-gave-up {
+  border-color: color-mix(in srgb, var(--c-danger, #e81123) 40%, var(--c-border));
+  background: color-mix(in srgb, var(--c-danger-bg, rgba(232, 17, 35, 0.08)) 92%, transparent);
+  color: var(--c-danger, #e81123);
+}
+
+.notify-conn__dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.notify-conn.is-retrying .notify-conn__dot {
+  animation: notify-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes notify-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.notify-conn__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1.2;
 }
 
-.username {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--app-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.role {
+.notify-conn__btn {
+  flex-shrink: 0;
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--c-primary);
   font-size: 12px;
-  color: var(--app-muted);
-  margin-top: 2px;
-}
-
-.drawer-actions {
-  display: flex;
-  gap: 8px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--app-border);
-  margin-bottom: 10px;
-}
-
-.drawer-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.drawer-item {
-  border: 1px solid var(--app-border);
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: var(--app-surface);
+  font-weight: 600;
   cursor: pointer;
 }
 
-.drawer-item.unread {
-  border-color: rgba(220, 38, 38, 0.4);
+.notify-conn.is-gave-up .notify-conn__btn {
+  background: var(--c-danger, #e81123);
 }
 
-.drawer-item.todo.unread {
-  border-color: rgba(37, 99, 235, 0.4);
+.notify-conn__btn:hover:not(:disabled) {
+  filter: brightness(1.05);
 }
 
-.it-head {
+.notify-conn__btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.topbar-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
+  height: 100%;
+  flex-shrink: 0;
 }
 
-.it-title {
-  font-weight: 700;
-  color: var(--app-text);
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.topbar-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--c-bg-input) 88%, transparent);
+  border: 1px solid var(--c-border-light);
 }
 
-.it-time {
-  flex: 0 0 auto;
-  font-size: 12px;
-  color: var(--app-muted);
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--c-text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
-.it-msg {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--app-muted);
-  line-height: 1.4;
+.tool-btn :deep(.el-icon) {
+  font-size: 16px;
+}
+
+.tool-btn:hover:not(:disabled) {
+  color: var(--c-text);
+  background: var(--c-bg-hover);
+}
+
+.tool-btn.is-active {
+  color: var(--c-primary);
+  background: var(--c-primary-bg);
+}
+
+.tool-btn--danger:hover:not(:disabled) {
+  color: #e81123;
+  background: rgba(232, 17, 35, 0.08);
+}
+
+.tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 2px;
+  background: var(--c-border);
 }
 </style>

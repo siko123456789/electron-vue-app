@@ -1,0 +1,36 @@
+/* Element UI 纵向表单规范：设置 label-position="top" 后自动生效。 */
+.el-form--label-top .el-form-item {
+  margin-bottom: 18px;
+}
+
+.el-form--label-top .el-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.el-form--label-top .el-form-item__label {
+  display: block;
+  float: none;
+  margin-bottom: 6px;
+  padding: 0;
+  color: var(--c-text-secondary);
+  font-size: var(--fs-sm);
+  // font-weight: var(--fw-semibold);
+  line-height: 18px;
+}
+
+.el-form--label-top .el-form-item__content {
+  margin-left: 0 !important;
+  line-height: 32px;
+}
+
+/* 必填星号统一放在标签文字右侧。 */
+.el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label::before {
+  display: none;
+  content: '';
+}
+
+.el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label::after {
+  margin-left: 2px;
+  color: var(--c-danger);
+  content: '*';
+}

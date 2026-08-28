@@ -1,0 +1,125 @@
+/*
+ * ================================================================
+ * Element Plus 弹窗覆盖规范
+ * ================================================================
+ * 宽度由业务通过 width 控制，这里只统一结构、排版和主题视觉。
+ */
+
+.v-modal {
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  opacity: 1;
+}
+
+:root[data-theme='light'] {
+  .v-modal {
+    background: var(--c-modal-mask);
+  }
+}
+
+.el-dialog {
+  --el-dialog-margin-top: 10vh;
+  color: var(--c-text);
+  background: var(--c-bg-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.el-dialog__header {
+  position: relative;
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.el-dialog__title {
+  color: var(--c-text);
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-semibold); /* 弹窗标题：600 */
+  line-height: 22px;
+}
+
+.el-dialog__subtitle {
+  margin: var(--sp-1) 32px 0 0;
+  color: var(--c-text-muted);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal);
+  line-height: 18px;
+}
+
+.el-dialog__headerbtn {
+  top: var(--sp-4);
+  right: var(--sp-5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--c-text-muted);
+  background: var(--c-bg-hover);
+  border-radius: var(--r-md);
+  font-size: var(--fs-xl);
+  line-height: 1;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.el-dialog__headerbtn:hover,
+.el-dialog__headerbtn:focus {
+  color: var(--c-primary);
+  background: var(--c-primary-bg);
+  outline: none;
+}
+
+.el-dialog__headerbtn .el-dialog__close,
+.el-dialog__headerbtn:hover .el-dialog__close,
+.el-dialog__headerbtn:focus .el-dialog__close {
+  color: inherit;
+}
+
+.el-dialog__body {
+  max-height: 500px;
+  overflow-y: auto;
+  padding: var(--sp-5);
+  color: var(--c-text-secondary);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-normal);
+}
+
+.el-dialog__footer {
+  padding: var(--sp-3) var(--sp-5);
+  // background: var(--c-bg-hover);
+  border-top: 1px solid var(--c-border);
+}
+
+/* 弹窗内键值信息的通用排版类。 */
+.el-dialog__label {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-normal);
+}
+
+.el-dialog__value {
+  color: var(--c-text);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-normal);
+}
+
+/*
+ * 弹窗宽度三档规范（业务通过 class 挂载）：
+ * - dialog-width-default：560px，详情 / 确认
+ * - dialog-width-wide：760px，列表 / 多步骤
+ * - dialog-width-xl：960px，表格 / 复杂表单
+ */
+.dialog-width-default.el-dialog {
+  width: min(var(--dialog-width-default), calc(100vw - 32px)) !important;
+}
+
+.dialog-width-wide.el-dialog {
+  width: min(var(--dialog-width-wide), calc(100vw - 32px)) !important;
+}
+
+.dialog-width-xl.el-dialog {
+  width: min(var(--dialog-width-xl), calc(100vw - 32px)) !important;
+}

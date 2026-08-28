@@ -24,4 +24,10 @@ declare namespace NodeJS {
 // Used in Renderer process, expose in `preload.ts`
 interface Window {
   ipcRenderer: import('electron').IpcRenderer
+  logger: {
+    debug: (message: string, meta?: Record<string, unknown>) => Promise<void>
+    info: (message: string, meta?: Record<string, unknown>) => Promise<void>
+    warn: (message: string, meta?: Record<string, unknown>) => Promise<void>
+    error: (message: string, meta?: Record<string, unknown>) => Promise<void>
+  }
 }

@@ -1,0 +1,106 @@
+/* Element UI 分页器统一规范：28px 页码、12px 字号、6px 圆角。 */
+/*
+使用示例 
+        <el-pagination
+          background
+          layout="total, prev, pager, next"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :total="total"
+          @current-change="handlePageChange"
+        />
+*/
+.el-pagination {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  color: var(--c-text-secondary);
+  font-size: var(--fs-sm);
+}
+
+.el-pagination button,
+.el-pagination .el-pager li,
+.el-pagination.is-background button,
+.el-pagination.is-background .el-pager li {
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--c-text-secondary);
+  background: var(--c-bg-input);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  line-height: 26px;
+  transition: color 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.el-pagination .btn-prev,
+.el-pagination .btn-next,
+.el-pagination.is-background .btn-prev,
+.el-pagination.is-background .btn-next {
+  margin: 0 3px;
+  background: var(--c-bg-input);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  font-size: var(--fs-xs);
+
+}
+
+.el-pagination .el-pager {
+  display: flex;
+  align-items: center;
+}
+
+.el-pagination .el-pager li,
+.el-pagination.is-background .el-pager li {
+  margin: 0 3px;
+  font-family: var(--font-mono);
+}
+
+.el-pagination button:hover,
+.el-pagination .el-pager li:hover,
+.el-pagination.is-background .el-pager li:not(.disabled):hover {
+  color: var(--c-primary-light);
+  background: var(--c-primary-bg);
+  border-color: var(--c-border-strong);
+}
+
+.el-pagination .btn-prev:hover,
+.el-pagination .btn-next:hover,
+.el-pagination.is-background .btn-prev:not(:disabled):hover,
+.el-pagination.is-background .btn-next:not(:disabled):hover {
+  color: var(--c-primary-light);
+  background: var(--c-primary-bg);
+  border-color: var(--c-border-strong);
+}
+
+.el-pagination .el-pager li.active,
+.el-pagination.is-background .el-pager li:not(.disabled).active {
+  color: var(--c-text-on-primary);
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+.el-pagination button:disabled,
+.el-pagination.is-background .btn-prev:disabled,
+.el-pagination.is-background .btn-next:disabled {
+  color: var(--c-text-secondary);
+  background: var(--c-bg-input);
+  border-color: var(--c-border-light);
+  opacity: 0.45;
+}
+
+.el-pagination .el-pagination__total {
+  height: 28px;
+  margin-right: 9px;
+  color: var(--c-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: 28px;
+}
+
+.el-pagination button,
+.el-pagination span:not([class*=suffix]) {
+  font-size: var(--fs-sm);
+}

@@ -1,11 +1,8 @@
+/** 操作审计接口 */
 import request from '@/utils/request'
 
-type ApiData = Record<string, any> | any[] | undefined
+/** POST /api/opt/handRecord：写入人工操作记录 */
+export function addHandRecordAPI(data: Record<string, unknown>) { return request.post('/opt/handRecord', data) }
 
-export function createWorkOrderAPI(data?: ApiData) {
-  return request({
-    url: '/attackGovern/workorder/create',
-    method: 'post',
-    data
-  })
-}
+/** POST /api/attackGovern/workorder/create：创建治理工单事件 */
+export function createWorkOrderAPI(data: Record<string, unknown>) { return request.post('/attackGovern/workorder/create', data) }

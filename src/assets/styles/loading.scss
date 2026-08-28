@@ -1,0 +1,18 @@
+/*
+ * Element UI Loading 遮罩主题适配
+ */
+.el-loading-mask {
+  background-color: var(--c-loading-mask) !important;
+}
+
+.el-loading-spinner .path {
+  stroke: var(--c-primary);
+}
+
+.el-loading-spinner .el-loading-text {
+  color: var(--c-text-secondary);
+}
+
+.ai-overlay-loading.el-loading-mask {
+  background-color: var(--c-loading-mask) !important;
+}

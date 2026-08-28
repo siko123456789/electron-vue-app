@@ -1,0 +1,319 @@
+/*
+ * ================================================================
+ * Element UI 表格覆盖规范
+ * ================================================================
+ * 支持：基础表格、排序、选择、悬停高亮、斑马纹、边框及展开行。
+ */
+
+/* ---------- 01. 表格容器 ---------- */
+.table-panel {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--c-bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--back-card);
+}
+
+.table-panel-r8 {
+  border-radius: var(--back-card-inner) !important;
+  .el-table {
+    border-radius: var(--back-card-inner) !important;
+  }
+}
+
+.table-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.table-panel__body > .el-table {
+  height: 100%;
+}
+
+.table-panel__pagination {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  margin: 10px;
+}
+
+.el-table {
+  width: 100%;
+  color: var(--c-text-secondary);
+  background: var(--c-bg-card);
+  border-radius: var(--back-card);
+  font-size: var(--fs-base);
+  overflow: hidden;
+
+  --el-table-bg-color: var(--c-bg-card);
+  --el-table-tr-bg-color: var(--c-bg-card);
+  --el-table-header-bg-color: var(--c-table-head);
+  --el-table-row-hover-bg-color: var(--c-bg-hover);
+  --el-table-border-color: var(--c-border);
+  --el-table-text-color: var(--c-text-secondary);
+  --el-table-header-text-color: var(--c-text-muted);
+  --el-fill-color-blank: var(--c-bg-card);
+
+  &::before,
+  &::after,
+  .el-table__fixed::before,
+  .el-table__fixed-right::before {
+    background-color: var(--c-border);
+  }
+
+  &::before {
+    height: 0 !important; // 最底部边框线
+  }
+
+  tr,
+  .el-table__body-wrapper,
+  .el-table__header-wrapper,
+  .el-table__fixed,
+  .el-table__fixed-right,
+  .el-table__fixed-left,
+  .el-table__fixed-header-wrapper,
+  .el-table__fixed-body-wrapper,
+  .el-table__fixed-right-patch {
+    background: var(--c-bg-card);
+  }
+}
+
+/* ---------- 02. 表头 ---------- */
+.el-table th.el-table__cell {
+  // height: 52px;
+  padding: var(--sp-3) 0;
+  color: var(--c-text-muted);
+  background: var(--c-table-head) !important;
+  border-bottom-color: var(--c-border);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+
+  &.is-leaf {
+    border-bottom-color: var(--c-border);
+  }
+}
+
+/* 固定列（如右侧「快捷操作」）表头/单元格必须显式覆盖，否则深色下会露出默认白底 */
+.el-table__fixed th.el-table__cell,
+.el-table__fixed-right th.el-table__cell,
+.el-table__fixed-left th.el-table__cell,
+.el-table__fixed-header-wrapper th.el-table__cell {
+  background: var(--c-table-head) !important;
+  color: var(--c-text-muted);
+}
+
+.el-table__fixed td.el-table__cell,
+.el-table__fixed-right td.el-table__cell,
+.el-table__fixed-left td.el-table__cell {
+  background: var(--c-bg-card) !important;
+}
+
+.el-table__fixed .el-table__body tr:hover > td.el-table__cell,
+.el-table__fixed-right .el-table__body tr:hover > td.el-table__cell,
+.el-table__fixed-left .el-table__body tr:hover > td.el-table__cell,
+.el-table__fixed .el-table__body tr.hover-row > td.el-table__cell,
+.el-table__fixed-right .el-table__body tr.hover-row > td.el-table__cell,
+.el-table__fixed-left .el-table__body tr.hover-row > td.el-table__cell {
+  background-color: var(--c-bg-hover) !important;
+}
+
+/* ---------- 03. 单元格 ---------- */
+.el-table td.el-table__cell {
+  height: 52px;
+  padding: var(--sp-3) 0;
+  color: var(--c-text-secondary);
+  background: transparent;
+  border-bottom-color: var(--c-border-light);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-normal);
+}
+
+.el-table th.el-table__cell > .cell,
+.el-table td.el-table__cell > .cell {
+  padding-right: var(--sp-4);
+  padding-left: var(--sp-4);
+  line-height: 20px;
+}
+
+/* 等宽单元格：字体加在 .cell 上，避免内层 span 导致溢出检测/气泡字体不一致 */
+.el-table td.is-font-mono > .cell {
+  font-family: var(--font-mono);
+}
+
+/* 主要文字：资产名称、IP、关键字段 */
+.el-table .cell-primary {
+  color: var(--c-text);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+}
+
+/* 次要文字：描述、备注、辅助信息 */
+.el-table .cell-secondary {
+  color: var(--c-text-muted);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-normal);
+}
+
+/* 可点击链接 */
+.el-table .cell-link {
+  color: var(--c-primary-light);
+  font-size: var(--fs-base);
+  font-weight: var(--fw-medium);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus {
+    color: var(--c-primary);
+  }
+}
+
+/* ---------- 04. 行状态 ---------- */
+.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell,
+.el-table__body tr.hover-row > td.el-table__cell,
+.el-table__body tr.hover-row.current-row > td.el-table__cell,
+.el-table__body tr.hover-row.el-table__row--striped > td.el-table__cell {
+  background-color: var(--c-bg-hover) !important;
+}
+
+.el-table__body tr.current-row > td.el-table__cell {
+  background: var(--c-primary-bg);
+}
+
+/* 展开按钮所在行与展开内容 */
+.el-table__body tr.expanded > td.el-table__cell,
+.el-table__body tr.is-expanded > td.el-table__cell,
+.el-table__expanded-cell[class*='cell'] {
+  background: var(--c-primary-bg);
+}
+
+.el-table__expanded-cell[class*='cell'] {
+  padding: var(--sp-4) var(--sp-6);
+  color: var(--c-text-secondary);
+  box-shadow: none;
+}
+
+/* ---------- 05. 斑马纹与边框表格 ---------- */
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background: var(--c-bg-hover);
+}
+
+.el-table--border,
+.el-table--group {
+  border-color: var(--c-border);
+}
+
+.el-table--border th.el-table__cell,
+.el-table--border td.el-table__cell {
+  border-right-color: var(--c-border-light);
+}
+
+/* ---------- 06. 排序与展开图标 ---------- */
+.el-table .sort-caret.ascending {
+  border-bottom-color: var(--c-text-muted);
+}
+
+.el-table .sort-caret.descending {
+  border-top-color: var(--c-text-muted);
+}
+
+.el-table .ascending .sort-caret.ascending {
+  border-bottom-color: var(--c-primary);
+}
+
+.el-table .descending .sort-caret.descending {
+  border-top-color: var(--c-primary);
+}
+
+.el-table__expand-icon {
+  color: var(--c-text-muted);
+
+  &--expanded {
+    color: var(--c-primary-light);
+  }
+}
+
+/* ---------- 07. 复选框 ---------- */
+.el-table .el-checkbox__inner,
+.el-table th.el-table__cell .el-checkbox__inner,
+.el-table td.el-table__cell .el-checkbox__inner {
+  background-color: var(--c-bg-input);
+  border-color: var(--c-border-strong);
+  border-radius: var(--r-sm);
+  box-shadow: inset 0 0 0 1px transparent;
+}
+
+.el-table .el-checkbox__input.is-focus .el-checkbox__inner,
+.el-table .el-checkbox__inner:hover,
+.el-table th.el-table__cell .el-checkbox__inner:hover,
+.el-table td.el-table__cell .el-checkbox__inner:hover {
+  border-color: var(--c-primary);
+}
+
+.el-table .el-checkbox__input.is-checked .el-checkbox__inner,
+.el-table .el-checkbox__input.is-indeterminate .el-checkbox__inner,
+.el-table th.el-table__cell .el-checkbox__input.is-checked .el-checkbox__inner,
+.el-table
+  th.el-table__cell
+  .el-checkbox__input.is-indeterminate
+  .el-checkbox__inner,
+.el-table td.el-table__cell .el-checkbox__input.is-checked .el-checkbox__inner,
+.el-table
+  td.el-table__cell
+  .el-checkbox__input.is-indeterminate
+  .el-checkbox__inner {
+  background-color: var(--c-primary);
+  border-color: var(--c-primary);
+}
+
+/* 深色下勾选框边框略提亮，避免和行背景糊在一起 */
+:root:not([data-theme='light']) .el-table .el-checkbox__inner,
+:root[data-theme='dark'] .el-table .el-checkbox__inner {
+  border-color: rgba(148, 153, 176, 0.55);
+  background-color: rgba(15, 22, 38, 0.9);
+}
+
+/* ---------- 08. 空状态与加载状态 ---------- */
+.el-table__empty-block {
+  min-height: 120px;
+  background: var(--c-bg-card);
+}
+
+.el-table__empty-text {
+  color: var(--c-text-muted);
+  font-size: var(--fs-base);
+}
+
+.el-table .el-loading-mask {
+  background: var(--c-bg-card);
+}
+
+.el-table .el-loading-spinner .path {
+  stroke: var(--c-primary);
+}
+
+/* ---------- 09. 表格空状态 ---------- */
+.ledger-table-empty {
+  padding: 32px 0;
+  text-align: center;
+
+  img {
+    width: 120px;
+    margin-bottom: 8px;
+  }
+
+  p {
+    margin: 0;
+    color: var(--c-text-muted);
+    font-size: var(--fs-sm);
+  }
+}
+.el-descriptions .is-bordered .el-descriptions-item__cell {
+  border-color: var(--c-border);
+}
